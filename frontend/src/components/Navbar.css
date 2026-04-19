@@ -1,0 +1,46 @@
+.navbar {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 1100px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 30px;
+  z-index: 1000;
+
+  border-radius: 100px;
+
+ 
+  background: rgba(255, 255, 255, 0.3); 
+  backdrop-filter: blur(20px);          
+  -webkit-backdrop-filter: blur(20px);   
+  
+  
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+}
+
+
+.navbar-logo h1 {
+  font-size: 20px;
+  color: #cc890cd2; 
+  margin: 0;
+}
+
+.auth-button {
+  background: #cc890cd2;
+  color: white;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s ease;
+}
+
+.auth-button:hover {
+  transform: scale(1.05);
+}
