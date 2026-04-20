@@ -23,12 +23,12 @@ const WaveLayout = ({ children }) => {
         </svg>
       </div>
 
-      {/* Контент сайта */}
+      {/* Основной контент */}
       <main style={styles.main}>
         {children}
       </main>
 
-      {/* Нижняя волна (перевернутая на 180 градусов) */}
+      {/* Нижняя волна */}
       <div style={{ ...styles.waveContainer, backgroundColor: 'white' }}>
         <svg 
           viewBox="0 0 1440 690" 
@@ -46,22 +46,29 @@ const styles = {
   wrapper: {
     display: 'flex',
     flexDirection: 'column',
-    minHeight: '100vh',
+    minHeight: '100vh', 
     margin: 0,
     padding: 0,
     backgroundColor: 'white',
+    overflowX: 'hidden',
   },
   waveContainer: {
     width: '100%',
     lineHeight: 0,
     overflow: 'hidden',
+    flexShrink: 0, 
   },
   svg: {
     display: 'block',
-    width: '100%',
+    width: '100%', 
     height: 'auto',
   },
-
+  main: {
+    flex: 1, 
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+  }
 };
 
 export default WaveLayout;
