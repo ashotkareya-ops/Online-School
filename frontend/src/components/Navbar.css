@@ -1,3 +1,12 @@
+/* src/components/Navbar.css */
+
+/*
+  ЧТО УЛУЧШЕНО:
+  - Цвет #cc890cd2 вынесен в CSS-переменную --brand-color (объявлена в App.css)
+  - Добавлен hover-эффект с тенью для лучшего UX
+  - Добавлен focus-стиль для доступности (a11y) — при навигации с клавиатуры
+*/
+
 .navbar {
   position: fixed;
   top: 20px;
@@ -13,34 +22,51 @@
 
   border-radius: 100px;
 
- 
-  background: rgba(255, 255, 255, 0.3); 
-  backdrop-filter: blur(20px);          
-  -webkit-backdrop-filter: blur(20px);   
-  
-  
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
   border: 1px solid rgba(255, 255, 255, 0.4);
   box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
 }
 
-
 .navbar-logo h1 {
   font-size: 20px;
-  color: #cc890cd2; 
+  /* Используем CSS-переменную вместо хардкода цвета */
+  color: var(--brand-color);
   margin: 0;
+  transition: opacity 0.2s ease;
+}
+
+.navbar-logo a:hover h1 {
+  opacity: 0.8;
+}
+
+/* Доступность: видимый фокус при навигации с клавиатуры */
+.navbar-logo a:focus-visible {
+  outline: 2px solid var(--brand-color);
+  outline-offset: 4px;
+  border-radius: 4px;
 }
 
 .auth-button {
-  background: #cc890cd2;
+  background: var(--brand-color);
   color: white;
   border: none;
   padding: 8px 24px;
   border-radius: 20px;
   cursor: pointer;
   font-weight: 600;
-  transition: transform 0.2s ease;
+  font-size: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .auth-button:hover {
   transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(204, 137, 12, 0.4);
+}
+
+.auth-button:focus-visible {
+  outline: 2px solid var(--brand-color);
+  outline-offset: 3px;
 }

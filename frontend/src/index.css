@@ -1,9 +1,42 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  max-width: none;
+  min-height: 100vh;
+}
+
 .hero-section {
   width: 100%;
   height: 100vh;
-  /* Vite сам поймет, где лежит файл, если путь относительный */
-  background-image: url('./assets/svg.png');
+  background-image: url('/svg.png'); 
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+.btn-mint-gradient {
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  border-radius: 12px;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-mint-gradient:hover {
+  opacity: 0.9;
 }

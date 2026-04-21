@@ -12,26 +12,24 @@ const WaveLayout = ({ children }) => {
 
   return (
     <div style={styles.wrapper}>
-      {/* Верхняя волна */}
-      <div style={styles.waveContainer}>
+      
+      <div style={{ ...styles.waveContainer, backgroundColor: 'white' }}>
         <svg 
-            viewBox="0 0 1440 690" 
-            xmlns="http://www.w3.org/2000/svg"
-            style={{ ...styles.svg, transform: 'rotate(180deg)' }}
+          viewBox="0 0 1440 700" 
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ ...styles.svg, transform: 'rotate(180deg)' }}
         >
           {svgContent}
         </svg>
       </div>
 
-      {/* Основной контент */}
       <main style={styles.main}>
         {children}
       </main>
 
-      {/* Нижняя волна */}
       <div style={{ ...styles.waveContainer, backgroundColor: 'white' }}>
         <svg 
-          viewBox="0 0 1440 690" 
+          viewBox="0 0 1440 700" 
           xmlns="http://www.w3.org/2000/svg" 
           style={styles.svg}
         >
@@ -46,7 +44,8 @@ const styles = {
   wrapper: {
     display: 'flex',
     flexDirection: 'column',
-    minHeight: '100vh', 
+    minHeight: '100vh',
+    width: '100%',
     margin: 0,
     padding: 0,
     backgroundColor: 'white',
@@ -54,20 +53,20 @@ const styles = {
   },
   waveContainer: {
     width: '100%',
-    lineHeight: 0,
+    lineHeight: 0, 
     overflow: 'hidden',
-    flexShrink: 0, 
+    flexShrink: 0,
   },
   svg: {
     display: 'block',
-    width: '100%', 
+    width: '100%',
     height: 'auto',
   },
   main: {
-    flex: 1, 
-    display: 'flex',
-    flexDirection: 'column',
+    flex: '1 0 auto', 
     width: '100%',
+    margin: 0,
+    padding: 0,
   }
 };
 

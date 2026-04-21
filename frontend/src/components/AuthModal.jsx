@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 
 const AuthModal = ({ isOpen, onClose }) => {
   const [isLogin, setIsLogin] = useState(true);
+  const [role, setRole] = useState('student'); // Новое состояние для роли
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
   if (!isOpen) return null;
+
   const isPasswordMatch = isLogin || (password === confirmPassword && password !== '');
+
   const handleOverlayClick = (e) => {
-    
     if (e.target === e.currentTarget) onClose();
   };
 
@@ -18,7 +20,18 @@ const AuthModal = ({ isOpen, onClose }) => {
       alert("Пароли не совпадают!");
       return;
     }
-    console.log("Форма отправлена", { password });
+    
+    // Данные для отправки на бэкенд
+    const payload = {
+      email: e.target.email.value,
+      password,
+      ...(isLogin ? {} : { 
+        username: e.target.username.value, 
+        role: role // Отправляем роль только при регистрации
+      })
+    };
+
+    console.log("Данные формы:", payload);
   };
 
   return (
@@ -30,10 +43,10 @@ const AuthModal = ({ isOpen, onClose }) => {
         
         <form style={styles.form} onSubmit={handleSubmit}>
           {!isLogin && (
-            <input type="text" placeholder="Имя пользователя" style={styles.input} required />
+            <input name="username" type="text" placeholder="Имя пользователя" style={styles.input} required />
           )}
           
-          <input type="email" placeholder="Email" style={styles.input} required />
+          <input name="email" type="email" placeholder="Email" style={styles.input} required />
           
           <input 
             type="password" 
@@ -44,22 +57,48 @@ const AuthModal = ({ isOpen, onClose }) => {
             required 
           />
 
-        
           {!isLogin && (
-            <input 
-              type="password" 
-              placeholder="Повторите пароль" 
-              style={{
-                ...styles.input,
-                
-                border: !isPasswordMatch && confirmPassword !== '' 
-                        ? '1px solid #ff4d4d' 
-                        : '1px solid rgba(255, 255, 255, 0.5)'
-              }} 
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required 
-            />
+            <>
+              <input 
+                type="password" 
+                placeholder="Повторите пароль" 
+                style={{
+                  ...styles.input,
+                  border: !isPasswordMatch && confirmPassword !== '' 
+                          ? '1px solid #ff4d4d' 
+                          : '1px solid rgba(255, 255, 255, 0.5)'
+                }} 
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required 
+              />
+              
+              {/* Блок выбора роли */}
+              <div style={styles.roleContainer}>
+                <label style={{...styles.roleOption, background: role === 'student' ? '#4ade80' : 'rgba(255,255,255,0.3)'}}>
+                  <input 
+                    type="radio" 
+                    name="role" 
+                    value="student" 
+                    checked={role === 'student'} 
+                    onChange={() => setRole('student')}
+                    style={styles.radioHidden}
+                  />
+                  Ученик
+                </label>
+                <label style={{...styles.roleOption, background: role === 'teacher' ? '#4ade80' : 'rgba(255,255,255,0.3)'}}>
+                  <input 
+                    type="radio" 
+                    name="role" 
+                    value="teacher" 
+                    checked={role === 'teacher'} 
+                    onChange={() => setRole('teacher')}
+                    style={styles.radioHidden}
+                  />
+                  Учитель
+                </label>
+              </div>
+            </>
           )}
           
           {!isLogin && !isPasswordMatch && confirmPassword !== '' && (
@@ -69,7 +108,6 @@ const AuthModal = ({ isOpen, onClose }) => {
           <button 
             style={{
               ...styles.submitBtn,
-              
               opacity: isPasswordMatch ? 1 : 0.5,
               cursor: isPasswordMatch ? 'pointer' : 'not-allowed'
             }}
@@ -94,8 +132,9 @@ const AuthModal = ({ isOpen, onClose }) => {
   );
 };
 
-
+// Дополненные стили
 const styles = {
+  // ... ваши существующие стили ...
   overlay: {
     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.2)', display: 'flex',
@@ -120,12 +159,37 @@ const styles = {
     background: 'rgba(255, 255, 255, 0.4)', outline: 'none', fontSize: '16px', color: '#333',
   },
   submitBtn: {
-    background: '#cc890cd2', color: 'white', border: 'none',
+    background: '#4ade80', // Поменял на мятный из вашего ТЗ
+    color: 'white', border: 'none',
     padding: '12px 24px', borderRadius: '20px', fontWeight: '600',
     fontSize: '16px', transition: 'transform 0.2s ease', marginTop: '10px',
   },
   footerText: { marginTop: '20px', fontSize: '14px', color: '#444' },
-  link: { color: '#cc890cd2', cursor: 'pointer', fontWeight: '700', textDecoration: 'underline' }
+  link: { color: '#cc890cd2', cursor: 'pointer', fontWeight: '700', textDecoration: 'underline' },
+  
+  // НОВЫЕ СТИЛИ ДЛЯ РОЛЕЙ
+  roleContainer: {
+    display: 'flex',
+    gap: '10px',
+    justifyContent: 'center',
+    marginTop: '5px'
+  },
+  roleOption: {
+    flex: 1,
+    padding: '8px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600',
+    transition: 'all 0.3s ease',
+    border: '1px solid rgba(255, 255, 255, 0.4)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  radioHidden: {
+    display: 'none'
+  }
 };
 
 export default AuthModal;

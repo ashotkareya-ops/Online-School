@@ -1,9 +1,17 @@
-/* src/App.css */
+
+
 :root {
-  /* Переменные для быстрой смены оформления */
+
   --bg-top: url('/svg_1.png');
   --bg-bottom: url('/svg_2.png');
-  --brand-green: #00d181;
+
+  --brand-color: #cc890cd2;
+  --brand-color-solid: #cc890c;     
+  --brand-color-hover: #b5780b;      
+  --brand-green: #00d181;            
+  --glass-blur: blur(20px);
+  --glass-bg: rgba(255, 255, 255, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.4);
 }
 
 * {
@@ -12,7 +20,6 @@
   box-sizing: border-box;
 }
 
-/* Главный контейнер всего приложения */
 .app-wrapper {
   position: relative;
   min-height: 100vh;
@@ -21,7 +28,7 @@
   font-family: 'Inter', sans-serif;
 }
 
-/* Слой с фоном — он отделен от контента */
+
 .background-decor {
   position: absolute;
   top: 0;
@@ -29,18 +36,18 @@
   width: 100%;
   height: 100%;
   z-index: 0;
-  pointer-events: none; /* Чтобы фон не мешал кликам по кнопкам */
-  
+  pointer-events: none;
+
   background-image: var(--bg-top), var(--bg-bottom);
   background-position: top center, bottom center;
   background-repeat: no-repeat;
   background-size: 100% auto;
 }
 
-/* Оболочка для твоего контента */
+
 .page-content {
   position: relative;
-  z-index: 1; /* Контент всегда над фоном */
+  z-index: 1;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -52,5 +59,5 @@
 }
 
 .spacer {
-  height: 60vh; /* Прослойка, чтобы доскроллить до нижней картинки */
+  height: 60vh;
 }
