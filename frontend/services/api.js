@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api'; // Будущий бэкенд
+const API_URL = 'http://localhost:5000/api'; 
 
 const api = axios.create({
   baseURL: API_URL,
@@ -9,7 +9,7 @@ const api = axios.create({
 export const authService = {
   login: async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
-    return response.data; // Ожидаем { token, user: { role, name } }
+    return response.data; 
   },
   
   register: async (email, password, role = 'student') => {
@@ -22,3 +22,4 @@ export const authService = {
     return response.data;
   }
 };
+

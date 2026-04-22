@@ -1,30 +1,27 @@
-import React, { useState } from 'react';
-import Navbar from './components/Navbar';
-import WaveLayout from './components/WaveLayout';
-import AuthModal from './components/AuthModal';
+// src/App.jsx
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Home from './pages/Home';
+import DashboardLayout from './layouts/DashboardLayout';
+import { useAuth } from './context/AuthContext';
 import './App.css';
 
-
 function App() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
-  
   return (
-
-    <div className="app-wrapper">
-      <div className="background-decor" />
-      <div className="page-content">
-        <Navbar onAuthClick={() => setIsModalOpen(true)} />
-
-        <WaveLayout>
-        </WaveLayout>
-      </div>
-
-      <AuthModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route 
+      
+        path="/dashboard" 
+        element={
+          isAuthenticated ? <DashboardLayout /> : <Navigate to="/" />
+        } 
       />
-    </div>
+
+      {/* Если пользователь ввел несуществующий адрес */}
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 }
 
