@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import './DashboardLayout.css';
@@ -6,43 +6,128 @@ import './DashboardLayout.css';
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('tasks');
+  const [activeTab, setActiveTab] = useState('home'); 
+  const [activeSubject, setActiveSubject] = useState('Все');
+
+  // --- ДАННЫЕ ДЛЯ РАЗДЕЛА "МОИ ОШИБКИ" ---
+  // В будущем эти данные будут приходить с бэкенда, когда в любом тесте был дан неверный ответ
+  const [errorTasks, setErrorTasks] = useState([
+    { id: 101, code: 'ЕГЭ №1', title: 'Вычисления по формулам', subject: 'Математика' },
+    { id: 105, code: 'ОГЭ №9', title: 'Линейные уравнения', subject: 'Математика' },
+    { id: 108, code: 'ДЗ №3', title: 'Циклы While/For', subject: 'Программирование' },
+  ]);
+
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
-  // Пример данных — позже мы будем получать их с бэкенда
-  const tasks = [
-    { id: 1, title: 'Квадратные уравнения', status: 'Новое', deadline: '25.04' },
-    { id: 2, title: 'Тригонометрия: синусы', status: 'В процессе', deadline: '27.04' },
-  ];
+  // Пример данных для ДЗ
+  const [homeworks] = useState([
+    { id: 1, title: 'Реакция на события в JS', subject: 'Программирование', status: 'todo' },
+    { id: 2, title: 'Квадратные уравнения', subject: 'Математика', status: 'review' },
+    { id: 3, title: 'Работа с API', subject: 'Программирование', status: 'review' },
+    { id: 4, title: 'Тригонометрия: синусы', subject: 'Математика', status: 'todo' },
+  ]);
 
-  // Если вдруг данных о пользователе нет, показываем загрузку или пустой экран
+  // Функция для "отработки" ошибки
+  const handleSolveError = (id) => {
+    // Здесь будет логика открытия модалки с заданием или перехода к решению.
+    // Если решение верное -> удаляем из списка:
+    setErrorTasks(prev => prev.filter(task => task.id !== id));
+    alert("Задание решено верно! Оно удалено из списка ошибок.");
+  };
+
   if (!user) return <div className="loading">Загрузка...</div>;
 
- const renderContent = () => {
+  const renderContent = () => {
     switch (activeTab) {
-      case 'tasks':
+      case 'home':
         return (
-          <>
-            <div className="content-header">
-              <h2>{user.role === 'teacher' ? 'Управление заданиями' : 'Актуальные задания'}</h2>
-              {user.role === 'teacher' && <button className="add-task-btn">+ Создать задание</button>}
+          <div className="main-container">
+            <h2>Добро пожаловать, {user.email}!</h2>
+            <p>Выберите раздел в меню слева, чтобы приступить к работе.</p>
+          </div>
+        );
+
+      case 'homework-list':
+        const subjects = ['Все', 'Математика', 'Программирование'];
+        const filteredBySubject = activeSubject === 'Все' 
+          ? homeworks 
+          : homeworks.filter(h => h.subject === activeSubject);
+
+        const todoTasks = filteredBySubject.filter(h => h.status === 'todo');
+        const reviewTasks = filteredBySubject.filter(h => h.status === 'review');
+
+        return (
+          <div className="main-container">
+            <div className="stats-container">
+              <div className="stat-card todo-border">
+                <span className="stat-label">Нужно сделать</span>
+                <span className="stat-value">{todoTasks.length}</span>
+              </div>
+              <div className="stat-card review-border">
+                <span className="stat-label">На проверке</span>
+                <span className="stat-value">{reviewTasks.length}</span>
+              </div>
             </div>
-            <div className="tasks-grid">
-              {/* Ваш существующий маппинг задач */}
-              {[{ id: 1, title: 'Квадратные уравнения', status: 'Новое', deadline: '25.04' }].map(task => (
-                <div key={task.id} className="task-card">
-                  <h3>{task.title}</h3>
-                  <button className="btn-start">Начать</button>
-                </div>
+
+            <div className="tabs-header">
+              {subjects.map(subject => (
+                <button 
+                  key={subject}
+                  className={`tab-button ${activeSubject === subject ? 'active' : ''}`}
+                  onClick={() => setActiveSubject(subject)}
+                >
+                  {subject}
+                </button>
               ))}
             </div>
-          </>
+
+            <div className="homework-grid">
+              <div className="homework-column">
+                <h3 className="column-title">Не сделанные</h3>
+                {todoTasks.map(hw => (
+                  <div key={hw.id} className="hw-item-card">{hw.title}</div>
+                ))}
+              </div>
+              <div className="homework-column">
+                <h3 className="column-title">Отправленные</h3>
+                {reviewTasks.map(hw => (
+                  <div key={hw.id} className="hw-item-card">{hw.title}</div>
+                ))}
+              </div>
+            </div>
+          </div>
         );
-      case 'tools':
-        return <h2>{user.role === 'teacher' ? 'Список учеников' : 'Интерактивные тренажеры'}</h2>;
+
+      case 'homework-status': // РАЗДЕЛ "МОИ ОШИБКИ"
+        return (
+          <div className="main-container">
+            <div className="error-header">
+            </div>
+            
+            <div className="error-list">
+              {errorTasks.length > 0 ? (
+                errorTasks.map(task => (
+                  <div key={task.id} className="error-card">
+                    <div className="error-badge">{task.code}</div>
+                    <div className="error-info">
+                      <h4>{task.title}</h4>
+                      <span className="subject-tag">{task.subject}</span>
+                    </div>
+                    <button className="btn-solve" onClick={() => handleSolveError(task.id)}>
+                      Решить снова
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-errors">🎉 Ошибок нет! Ты всё усвоил.</div>
+              )}
+            </div>
+          </div>
+        );
+
       case 'profile':
         return (
           <div className="profile-section">
@@ -51,8 +136,9 @@ const DashboardLayout = () => {
             <p>Роль: {user.role === 'teacher' ? 'Учитель' : 'Ученик'}</p>
           </div>
         );
+
       default:
-        return <h2>Раздел в разработке</h2>;
+        return <h2>Раздел "{activeTab}" в разработке</h2>;
     }
   };
 
@@ -62,57 +148,23 @@ const DashboardLayout = () => {
         <div className="sidebar-logo">Твой репетитор</div>
         <nav className="sidebar-nav">
           <ul>
-          {/* 1. Главная */}
-            <li 
-              className={activeTab === 'home' ? 'active' : ''} 
-              onClick={() => setActiveTab('home')}
-            >
+            <li className={activeTab === 'home' ? 'active' : ''} onClick={() => setActiveTab('home')}>
               Главная
             </li>
-
-            {/* 2. Выданные ДЗ / Мое обучение */}
-            <li 
-              className={activeTab === 'homework-list' ? 'active' : ''} 
-              onClick={() => setActiveTab('homework-list')}
-            >
-              {user.role === 'teacher' ? 'Выданные ДЗ' : 'Мое обучение'}
+            <li className={activeTab === 'homework-list' ? 'active' : ''} onClick={() => setActiveTab('homework-list')}>
+              Домашняя работа
             </li>
-
-            {/* 3. Проверка ДЗ / Мои ошибки */}
-            <li 
-              className={activeTab === 'homework-status' ? 'active' : ''} 
-              onClick={() => setActiveTab('homework-status')}
-            >
-              {user.role === 'teacher' ? 'Проверка ДЗ' : 'Мои ошибки'}
+            <li className={activeTab === 'homework-status' ? 'active' : ''} onClick={() => setActiveTab('homework-status')}>
+              {user.role === 'teacher' ? 'Банк заданий' : 'Мои ошибки'}
             </li>
-
-            {/* 4. Банк заданий (только для учителя) */}
             {user.role === 'teacher' && (
-              <li 
-                className={activeTab === 'task-bank' ? 'active' : ''} 
-                onClick={() => setActiveTab('task-bank')}
-              >
-                Банк заданий
-              </li>
-            )}
-
-            {/* 5. Ученики (только для учителя) */}
-            {user.role === 'teacher' && (
-              <li 
-                className={activeTab === 'students' ? 'active' : ''} 
-                onClick={() => setActiveTab('students')}
-              >
+              <li className={activeTab === 'students' ? 'active' : ''} onClick={() => setActiveTab('students')}>
                 Ученики
               </li>
             )}
-
-            {/* 6. Профиль */}
-            <li 
-              className={activeTab === 'profile' ? 'active' : ''} 
-              onClick={() => setActiveTab('profile')}
-            >
+            <li className={activeTab === 'profile' ? 'active' : ''} onClick={() => setActiveTab('profile')}>
               Профиль
-            </li>       
+            </li>
           </ul>
         </nav>
         <button onClick={handleLogout} className="logout-btn">Выйти</button>
@@ -129,7 +181,6 @@ const DashboardLayout = () => {
         </header>
 
         <section className="dashboard-content">
-          {/* Динамически вызываем функцию отрисовки */}
           {renderContent()}
         </section>
       </main>
