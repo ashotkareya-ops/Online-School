@@ -62,46 +62,49 @@ const DashboardLayout = () => {
         <div className="sidebar-logo">Твой репетитор</div>
         <nav className="sidebar-nav">
           <ul>
+          {/* 1. Главная */}
             <li 
-              className={activeTab === 'tasks' ? 'active' : ''} 
-              onClick={() => setActiveTab('tasks')}
+              className={activeTab === 'home' ? 'active' : ''} 
+              onClick={() => setActiveTab('home')}
             >
-              {user.role === 'teacher' ? 'Мои курсы' : 'Мои задания'}
+              Главная
             </li>
 
-            {/* 2. Статистика (ДЗ / Ошибки) */}
+            {/* 2. Выданные ДЗ / Мое обучение */}
             <li 
-              className={activeTab === 'homework' ? 'active' : ''} 
-              onClick={() => setActiveTab('homework')}
+              className={activeTab === 'homework-list' ? 'active' : ''} 
+              onClick={() => setActiveTab('homework-list')}
             >
-              {user.role === 'teacher' ? 'Выданные ДЗ' : 'Ошибки'}
+              {user.role === 'teacher' ? 'Выданные ДЗ' : 'Мое обучение'}
             </li>
 
-            {/* 3. Проверка ДЗ (Только для учителя) */}
+            {/* 3. Проверка ДЗ / Мои ошибки */}
+            <li 
+              className={activeTab === 'homework-status' ? 'active' : ''} 
+              onClick={() => setActiveTab('homework-status')}
+            >
+              {user.role === 'teacher' ? 'Проверка ДЗ' : 'Мои ошибки'}
+            </li>
+
+            {/* 4. Банк заданий (только для учителя) */}
             {user.role === 'teacher' && (
               <li 
-                className={activeTab === 'check' ? 'active' : ''} 
-                onClick={() => setActiveTab('check')}
+                className={activeTab === 'task-bank' ? 'active' : ''} 
+                onClick={() => setActiveTab('task-bank')}
               >
-                Проверка ДЗ
+                Банк заданий
               </li>
             )}
 
-            {/* 4. Обучение / Банк заданий */}
-            <li 
-              className={activeTab === 'learning' ? 'active' : ''} 
-              onClick={() => setActiveTab('learning')}
-            >
-              {user.role === 'teacher' ? 'Банк заданий' : 'Мое обучение'}
-            </li>
-            
-            {/* 5. Ученики / Тренажеры */}
-            <li 
-              className={activeTab === 'tools' ? 'active' : ''} 
-              onClick={() => setActiveTab('tools')}
-            >
-              {user.role === 'teacher' ? 'Ученики' : 'Тренажеры'}
-            </li>
+            {/* 5. Ученики (только для учителя) */}
+            {user.role === 'teacher' && (
+              <li 
+                className={activeTab === 'students' ? 'active' : ''} 
+                onClick={() => setActiveTab('students')}
+              >
+                Ученики
+              </li>
+            )}
 
             {/* 6. Профиль */}
             <li 
@@ -109,7 +112,7 @@ const DashboardLayout = () => {
               onClick={() => setActiveTab('profile')}
             >
               Профиль
-            </li>         
+            </li>       
           </ul>
         </nav>
         <button onClick={handleLogout} className="logout-btn">Выйти</button>
