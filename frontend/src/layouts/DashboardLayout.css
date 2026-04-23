@@ -2,7 +2,7 @@
   display: flex;
   min-height: 100vh;
   background: #f4f7f6;
-  font-family: 'Inter', sans-serif;
+  font-family: 'cursiv';
 }
 
 /* ── Sidebar ────────────────────────────────── */
@@ -126,8 +126,11 @@
 }
 
 .stats-row {
-  display: flex;
-  gap: 16px;
+    display: flex;
+    gap: inherit;
+    flex-direction: column;
+    align-content: center;
+    justify-content: center;
 }
 
 .stat-card {
@@ -264,4 +267,33 @@
   height: 100vh;
   font-size: 16px;
   color: #888;
+}
+
+
+/* Адаптив для мобильных устройств */
+@media (max-width: 768px) {
+  .dashboard-wrapper {
+    flex-direction: column; /* Сайдбар теперь сверху, контент под ним */
+  }
+
+  .sidebar {
+    width: 100% !important;
+    height: auto;
+    padding: 10px 20px;
+    flex-direction: column; /* Логотип и меню в одну линию */
+    justify-content: space-between;
+  }
+
+  .sidebar-nav ul {
+    display: flex;
+    gap: 10px;
+  }
+
+  .dashboard-main {
+    padding: 10px !important; /* Уменьшаем отступы, чтобы было больше места */
+  }
+
+  .tasks-grid {
+    grid-template-columns: 1fr !important; /* Карточки одна под другой */
+  }
 }

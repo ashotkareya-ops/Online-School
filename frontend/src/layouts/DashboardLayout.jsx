@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import './DashboardLayout.css';
@@ -6,7 +6,7 @@ import './DashboardLayout.css';
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-
+  const [activeTab, setActiveTab] = useState('tasks');
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -21,17 +21,95 @@ const DashboardLayout = () => {
   // Если вдруг данных о пользователе нет, показываем загрузку или пустой экран
   if (!user) return <div className="loading">Загрузка...</div>;
 
+ const renderContent = () => {
+    switch (activeTab) {
+      case 'tasks':
+        return (
+          <>
+            <div className="content-header">
+              <h2>{user.role === 'teacher' ? 'Управление заданиями' : 'Актуальные задания'}</h2>
+              {user.role === 'teacher' && <button className="add-task-btn">+ Создать задание</button>}
+            </div>
+            <div className="tasks-grid">
+              {/* Ваш существующий маппинг задач */}
+              {[{ id: 1, title: 'Квадратные уравнения', status: 'Новое', deadline: '25.04' }].map(task => (
+                <div key={task.id} className="task-card">
+                  <h3>{task.title}</h3>
+                  <button className="btn-start">Начать</button>
+                </div>
+              ))}
+            </div>
+          </>
+        );
+      case 'tools':
+        return <h2>{user.role === 'teacher' ? 'Список учеников' : 'Интерактивные тренажеры'}</h2>;
+      case 'profile':
+        return (
+          <div className="profile-section">
+            <h2>Мой профиль</h2>
+            <p>Email: {user.email}</p>
+            <p>Роль: {user.role === 'teacher' ? 'Учитель' : 'Ученик'}</p>
+          </div>
+        );
+      default:
+        return <h2>Раздел в разработке</h2>;
+    }
+  };
+
   return (
     <div className="dashboard-wrapper">
       <aside className="sidebar">
-        <div className="sidebar-logo">Math.School</div>
+        <div className="sidebar-logo">Твой репетитор</div>
         <nav className="sidebar-nav">
           <ul>
-            <li className="active">
+            <li 
+              className={activeTab === 'tasks' ? 'active' : ''} 
+              onClick={() => setActiveTab('tasks')}
+            >
               {user.role === 'teacher' ? 'Мои курсы' : 'Мои задания'}
             </li>
-            <li>{user.role === 'teacher' ? 'Ученики' : 'Курсы'}</li>
-            <li>Профиль</li>
+
+            {/* 2. Статистика (ДЗ / Ошибки) */}
+            <li 
+              className={activeTab === 'homework' ? 'active' : ''} 
+              onClick={() => setActiveTab('homework')}
+            >
+              {user.role === 'teacher' ? 'Выданные ДЗ' : 'Ошибки'}
+            </li>
+
+            {/* 3. Проверка ДЗ (Только для учителя) */}
+            {user.role === 'teacher' && (
+              <li 
+                className={activeTab === 'check' ? 'active' : ''} 
+                onClick={() => setActiveTab('check')}
+              >
+                Проверка ДЗ
+              </li>
+            )}
+
+            {/* 4. Обучение / Банк заданий */}
+            <li 
+              className={activeTab === 'learning' ? 'active' : ''} 
+              onClick={() => setActiveTab('learning')}
+            >
+              {user.role === 'teacher' ? 'Банк заданий' : 'Мое обучение'}
+            </li>
+            
+            {/* 5. Ученики / Тренажеры */}
+            <li 
+              className={activeTab === 'tools' ? 'active' : ''} 
+              onClick={() => setActiveTab('tools')}
+            >
+              {user.role === 'teacher' ? 'Ученики' : 'Тренажеры'}
+            </li>
+
+            {/* 6. Профиль */}
+            <li 
+              className={activeTab === 'profile' ? 'active' : ''} 
+              onClick={() => setActiveTab('profile')}
+            >
+              Профиль
+            </li>         
           </ul>
         </nav>
         <button onClick={handleLogout} className="logout-btn">Выйти</button>
@@ -45,44 +123,11 @@ const DashboardLayout = () => {
               {user.role === 'teacher' ? 'Преподаватель' : 'Студент'}
             </span>
           </div>
-          <p className="user-email">{user.email}</p>
         </header>
 
         <section className="dashboard-content">
-          <div className="stats-row">
-            <div className="stat-card">
-              <span className="stat-value">12</span>
-              <span className="stat-label">Выполнено</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-value">2</span>
-              <span className="stat-label">В очереди</span>
-            </div>
-          </div>
-
-          <div className="content-header">
-            <h2>{user.role === 'teacher' ? 'Управление заданиями' : 'Актуальные задания'}</h2>
-            {user.role === 'teacher' && (
-               <button className="add-task-btn">+ Создать задание</button>
-            )}
-          </div>
-
-          <div className="tasks-grid">
-            {tasks.map(task => (
-              <div key={task.id} className="task-card">
-                <h3>{task.title}</h3>
-                <div className="task-info">
-                  <span className={`status ${task.status === 'Новое' ? 'new' : ''}`}>
-                    {task.status}
-                  </span>
-                  <span className="deadline">До {task.deadline}</span>
-                </div>
-                <button className="btn-start">
-                  {user.role === 'teacher' ? 'Редактировать' : 'Начать'}
-                </button>
-              </div>
-            ))}
-          </div>
+          {/* Динамически вызываем функцию отрисовки */}
+          {renderContent()}
         </section>
       </main>
     </div>
