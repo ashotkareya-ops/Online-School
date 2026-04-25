@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import '../components/SetupProfileModal/SetupProfileModal.css';
 
@@ -13,7 +13,7 @@ const SetupProfileModal = ({ onSave }) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const subjects = {
+  const subjects = useMemo(() => ({
     oge: ['Математика', 'Информатика', 'Физика'],
     ege: [
       'Математика (профильный уровень)',
@@ -21,32 +21,36 @@ const SetupProfileModal = ({ onSave }) => {
       'Физика',
       'Информатика'
     ]
-  };
+  }), []);
 
   const toggleSubject = (subject) => {
-    setFormData(prev => {
-      const isSelected = prev.selectedSubjects.includes(subject);
-      return {
-        ...prev,
-        selectedSubjects: isSelected
-          ? prev.selectedSubjects.filter(s => s !== subject)
-          : [...prev.selectedSubjects, subject]
-      };
-    });
+    setFormData(prev => ({
+      ...prev,
+      selectedSubjects: prev.selectedSubjects.includes(subject)
+        ? prev.selectedSubjects.filter(s => s !== subject)
+        : [...prev.selectedSubjects, subject]
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
 
+    const firstName = formData.firstName.trim();
+    const lastName = formData.lastName.trim();
+
+    if (firstName.length < 2 || lastName.length < 2) {
+      setError('Имя и фамилия должны быть не менее 2 символов');
+      return;
+    }
+
+    setIsLoading(true);
     const result = await updateProfile({
-      first_name: formData.firstName,
-      last_name: formData.lastName,
-      exam_type: formData.examType,
+      first_name: firstName,
+      last_name: lastName,
+      exam_type: formData.examType.toLowerCase(),
       subjects: formData.selectedSubjects,
     });
-
     setIsLoading(false);
 
     if (result.success) {
@@ -55,6 +59,12 @@ const SetupProfileModal = ({ onSave }) => {
       setError(result.message);
     }
   };
+
+  const isFormValid =
+    formData.firstName.trim().length >= 2 &&
+    formData.lastName.trim().length >= 2 &&
+    formData.examType !== '' &&
+    formData.selectedSubjects.length > 0;
 
   return (
     <div className="modal-overlay">
@@ -66,6 +76,7 @@ const SetupProfileModal = ({ onSave }) => {
           <input
             className="modal-input"
             placeholder="Имя"
+            maxLength={50}
             required
             value={formData.firstName}
             onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
@@ -73,24 +84,22 @@ const SetupProfileModal = ({ onSave }) => {
           <input
             className="modal-input"
             placeholder="Фамилия"
+            maxLength={50}
             required
             value={formData.lastName}
             onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
           />
 
           <div className="role-picker">
-            <div
-              className={`role-option ${formData.examType === 'oge' ? 'role-option--active' : ''}`}
-              onClick={() => setFormData({ ...formData, examType: 'oge', selectedSubjects: [] })}
-            >
-              ОГЭ
-            </div>
-            <div
-              className={`role-option ${formData.examType === 'ege' ? 'role-option--active' : ''}`}
-              onClick={() => setFormData({ ...formData, examType: 'ege', selectedSubjects: [] })}
-            >
-              ЕГЭ
-            </div>
+            {['oge', 'ege'].map(type => (
+              <div
+                key={type}
+                className={`role-option ${formData.examType === type ? 'role-option--active' : ''}`}
+                onClick={() => setFormData({ ...formData, examType: type, selectedSubjects: [] })}
+              >
+                {type === 'oge' ? 'ОГЭ' : 'ЕГЭ'}
+              </div>
+            ))}
           </div>
 
           {formData.examType && (
@@ -116,7 +125,7 @@ const SetupProfileModal = ({ onSave }) => {
           <button
             type="submit"
             className="modal-submit"
-            disabled={isLoading || formData.selectedSubjects.length === 0 || !formData.firstName || !formData.lastName || !formData.examType}
+            disabled={isLoading || !isFormValid}
           >
             {isLoading ? 'Сохранение...' : `Сохранить и начать (${formData.selectedSubjects.length})`}
           </button>

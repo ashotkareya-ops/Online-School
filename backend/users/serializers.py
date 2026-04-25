@@ -2,10 +2,20 @@ from rest_framework import serializers
 from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
+    students_count = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'first_name', 'last_name', 
-                  'role', 'is_profile_filled', 'exam_type', 'subjects']
+        fields = [
+            'id', 'email', 'username', 'first_name', 'last_name',
+            'role', 'is_profile_filled', 'exam_type', 'subjects',
+            'teacher_code', 'teacher', 'students_count'
+        ]
+
+    def get_students_count(self, obj):
+        if obj.role == 'teacher':
+            return obj.students.count()
+        return None
 
 
 class SetupProfileSerializer(serializers.ModelSerializer):

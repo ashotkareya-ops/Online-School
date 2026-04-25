@@ -16,6 +16,7 @@ const AuthModal = ({ isOpen, onClose }) => {
   const [teacherCode, setTeacherCode] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showTeacherCode, setShowTeacherCode] = useState(null);
 
   if (!isOpen) return null;
 
@@ -36,7 +37,12 @@ const AuthModal = ({ isOpen, onClose }) => {
   };
 
   const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) onClose();
+    if (e.target === e.currentTarget && !showTeacherCode) onClose();
+  };
+
+  const handleTeacherCodeClose = () => {
+    setShowTeacherCode(null);
+    navigate('/dashboard');
   };
 
   const handleSubmit = async (e) => {
@@ -50,45 +56,85 @@ const AuthModal = ({ isOpen, onClose }) => {
         setIsLoading(false);
         return;
       }
+      if (password.length < 8) {
+        setError('Пароль должен быть не менее 8 символов');
+        setIsLoading(false);
+        return;
+      }
       if (role === 'student' && !teacherCode.trim()) {
-        setError('Пожалуйста, введите код учителя');
+        setError('Введите код учителя');
         setIsLoading(false);
         return;
       }
     }
 
     try {
-      let result;
       if (isLogin) {
-        result = await login(email, password);
-      } else {
-        result = await register({
-          username,
-          email,
-          password,
-          role,
-          teacher_code: teacherCode
-        });
-      }
-
-      if (result.success) {
-        resetForm();
-        onClose();
-        if (isLogin) {
+        const result = await login(email, password);
+        if (result.success) {
+          resetForm();
+          onClose();
           navigate('/dashboard');
         } else {
-          alert('Регистрация успешна! Теперь вы можете войти.');
-          setIsLogin(true);
+          setError(result.message || 'Произошла ошибка');
         }
       } else {
-        setError(result.message || 'Произошла ошибка');
+        const result = await register({ username, email, password, role, teacher_code: teacherCode });
+        if (result.success) {
+          const loginResult = await login(email, password);
+          if (loginResult.success) {
+            resetForm();
+            onClose();
+            if (role === 'teacher' && result.teacher_code) {
+              setShowTeacherCode(result.teacher_code);
+            } else {
+              navigate('/dashboard');
+            }
+          }
+        } else {
+          setError(result.message || 'Произошла ошибка');
+        }
       }
-    } catch (err) {
+    } catch {
       setError('Нет связи с сервером');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Модалка с кодом учителя
+  if (showTeacherCode) {
+    return (
+      <div className="modal-overlay">
+        <div className="modal" style={{ textAlign: 'center' }}>
+          <h2 className="modal-title">🎉 Вы зарегистрированы!</h2>
+          <p style={{ color: '#444', marginBottom: '10px' }}>
+            Ваш персональный код для учеников:
+          </p>
+          <div style={{
+            background: 'rgba(0,208,132,0.15)',
+            border: '2px solid #00d084',
+            borderRadius: '15px',
+            padding: '20px',
+            margin: '15px 0',
+            fontSize: '28px',
+            fontWeight: '800',
+            letterSpacing: '4px',
+            color: '#00d084'
+          }}>
+            {showTeacherCode}
+          </div>
+          <p style={{ color: '#666', fontSize: '13px', marginBottom: '20px' }}>
+            Сохраните этот код! Ученики будут вводить его при регистрации.<br />
+            Вы также найдёте его в своём профиле.
+          </p>
+          <button className="modal-submit" onClick={handleTeacherCodeClose}>
+            Перейти в кабинет
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
@@ -104,6 +150,7 @@ const AuthModal = ({ isOpen, onClose }) => {
               className="modal-input"
               value={username}
               onChange={e => setUsername(e.target.value)}
+              maxLength={30}
               required
             />
           )}
@@ -119,10 +166,11 @@ const AuthModal = ({ isOpen, onClose }) => {
 
           <input
             type="password"
-            placeholder="Пароль"
+            placeholder="Пароль (минимум 8 символов)"
             className="modal-input"
             value={password}
             onChange={e => setPassword(e.target.value)}
+            minLength={8}
             required
           />
 
@@ -159,7 +207,8 @@ const AuthModal = ({ isOpen, onClose }) => {
                   placeholder="Код вашего учителя"
                   className="modal-input"
                   value={teacherCode}
-                  onChange={e => setTeacherCode(e.target.value)}
+                  onChange={e => setTeacherCode(e.target.value.toUpperCase())}
+                  maxLength={10}
                   required
                 />
               )}

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from users.views import MyTokenObtainPairView, get_me, setup_profile
+from users.views import MyTokenObtainPairView, get_me, setup_profile, register
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -9,4 +9,5 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/user/me/', get_me, name='get_me'),
     path('api/user/setup/', setup_profile, name='setup_profile'),
+    path('api/register/', register, name='register'),
 ]

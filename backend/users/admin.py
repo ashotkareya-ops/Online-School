@@ -4,13 +4,13 @@ from .models import User
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ('email', 'username', 'role', 'exam_type', 'is_staff', 'is_active')
+    list_display = ('email', 'username', 'role', 'teacher_code', 'is_staff')
     list_filter = ('role', 'exam_type', 'is_staff', 'is_active')
-    search_fields = ('email', 'username')
+    search_fields = ('email', 'username', 'teacher_code')
     
     fieldsets = BaseUserAdmin.fieldsets + (
         ('Доп. информация', {
-            'fields': ('role', 'is_profile_filled', 'exam_type', 'subjects')
+            'fields': ('role', 'is_profile_filled', 'exam_type', 'subjects', 'teacher_code', 'teacher')
         }),
     )
     

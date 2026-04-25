@@ -143,17 +143,46 @@ const DashboardLayout = () => {
           </div>
         );
 
-      case 'profile':
-        return (
-          <div className="profile-section">
-            <h2>Мой профиль</h2>
-            <div className="profile-info-card">
-               <p><strong>Email:</strong> {user.email}</p>
-               <p><strong>Статус профиля:</strong> {user.is_profile_filled ? 'Заполнен' : 'Требует настройки'}</p>
-            </div>
-          </div>
-        );
+     case 'profile':
+      return (
+        <div className="profile-section">
+          <h2>Мой профиль</h2>
+          <div className="profile-info-card">
+            <p><strong>Email:</strong> {user.email}</p>
+            <p><strong>Имя:</strong> {user.first_name || '—'}</p>
+            <p><strong>Фамилия:</strong> {user.last_name || '—'}</p>
+            <p><strong>Роль:</strong> {user.role === 'teacher' ? 'Учитель' : 'Ученик'}</p>
+            
+            {/* Для учителя — показываем код */}
+            {user.role === 'teacher' && (
+              <div style={{
+                marginTop: '15px',
+                padding: '15px',
+                background: 'rgba(0,208,132,0.1)',
+                borderRadius: '12px',
+                border: '2px solid #00d084'
+              }}>
+                <p style={{ marginBottom: '5px' }}><strong>Ваш код для учеников:</strong></p>
+                <span style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '3px', color: '#00d084' }}>
+                  {user.teacher_code}
+                </span>
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                  Учеников подключено: {user.students_count || 0}
+                </p>
+              </div>
+            )}
 
+            {/* Для ученика — показываем предметы и экзамен */}
+            {user.role === 'student' && (
+              <div style={{ marginTop: '15px' }}>
+                <p><strong>Экзамен:</strong> {user.exam_type ? (user.exam_type === 'oge' ? 'ОГЭ' : 'ЕГЭ') : '—'}</p>
+                <p><strong>Предметы:</strong> {user.subjects?.length > 0 ? user.subjects.join(', ') : '—'}</p>
+                <p><strong>Статус профиля:</strong> {user.is_profile_filled ? '✅ Заполнен' : '⚠️ Требует настройки'}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      );
       default:
         return <h2>Раздел в разработке</h2>;
     }
