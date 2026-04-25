@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import SetupProfileModal from '../components/AuthForm';
 import './DashboardLayout.css';
 
 const DashboardLayout = () => {
@@ -8,21 +9,26 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('home'); 
   const [activeSubject, setActiveSubject] = useState('Все');
+  
+  // БЕЗОПАСНОСТЬ: Теперь мы не смотрим в localStorage.
+  // Модалка показывается только если роль 'student' И сервер говорит, что профиль не заполнен.
+  const [showSetup, setShowSetup] = useState(false);
 
-  // --- ДАННЫЕ ДЛЯ РАЗДЕЛА "МОИ ОШИБКИ" ---
-  // В будущем эти данные будут приходить с бэкенда, когда в любом тесте был дан неверный ответ
+  useEffect(() => {
+    if (user && user.role === 'student' && !user.is_profile_filled) {
+      setShowSetup(true);
+    } else {
+      setShowSetup(false);
+    }
+  }, [user]);
+
+  // --- ДАННЫЕ (В будущем будут приходить с бэкенда через fetch) ---
   const [errorTasks, setErrorTasks] = useState([
     { id: 101, code: 'ЕГЭ №1', title: 'Вычисления по формулам', subject: 'Математика' },
     { id: 105, code: 'ОГЭ №9', title: 'Линейные уравнения', subject: 'Математика' },
     { id: 108, code: 'ДЗ №3', title: 'Циклы While/For', subject: 'Программирование' },
   ]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
-  // Пример данных для ДЗ
   const [homeworks] = useState([
     { id: 1, title: 'Реакция на события в JS', subject: 'Программирование', status: 'todo' },
     { id: 2, title: 'Квадратные уравнения', subject: 'Математика', status: 'review' },
@@ -30,12 +36,39 @@ const DashboardLayout = () => {
     { id: 4, title: 'Тригонометрия: синусы', subject: 'Математика', status: 'todo' },
   ]);
 
-  // Функция для "отработки" ошибки
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  const handleSaveProfile = async (data) => {
+    try {
+      // Здесь будет реальный fetch запрос к твоему Django API
+      console.log("Отправка данных на сервер Django:", data);
+      
+      /* ПРИМЕР ЗАПРОСА:
+      const response = await fetch('http://127.0.0.1:8000/api/setup-profile/', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify(data)
+      });
+      if (response.ok) { setShowSetup(false); }
+      */
+
+      // Пока эмулируем успех:
+      setShowSetup(false);
+      alert("Профиль успешно обновлен!");
+    } catch (error) {
+      alert("Ошибка при сохранении профиля");
+    }
+  };
+
   const handleSolveError = (id) => {
-    // Здесь будет логика открытия модалки с заданием или перехода к решению.
-    // Если решение верное -> удаляем из списка:
     setErrorTasks(prev => prev.filter(task => task.id !== id));
-    alert("Задание решено верно! Оно удалено из списка ошибок.");
+    alert("Задание решено верно!");
   };
 
   if (!user) return <div className="loading">Загрузка...</div>;
@@ -45,7 +78,7 @@ const DashboardLayout = () => {
       case 'home':
         return (
           <div className="main-container">
-            <h2>Добро пожаловать, {user.email}!</h2>
+            <h2>Добро пожаловать, {user.username || user.email}!</h2>
             <p>Выберите раздел в меню слева, чтобы приступить к работе.</p>
           </div>
         );
@@ -101,30 +134,33 @@ const DashboardLayout = () => {
           </div>
         );
 
-      case 'homework-status': // РАЗДЕЛ "МОИ ОШИБКИ"
+      case 'homework-status':
         return (
           <div className="main-container">
             <div className="error-header">
+              <h2>{user.role === 'teacher' ? 'Банк заданий' : 'Мои ошибки'}</h2>
             </div>
             
-            <div className="error-list">
-              {errorTasks.length > 0 ? (
-                errorTasks.map(task => (
-                  <div key={task.id} className="error-card">
-                    <div className="error-badge">{task.code}</div>
-                    <div className="error-info">
-                      <h4>{task.title}</h4>
-                      <span className="subject-tag">{task.subject}</span>
+            {user.role === 'student' && (
+              <div className="error-list">
+                {errorTasks.length > 0 ? (
+                  errorTasks.map(task => (
+                    <div key={task.id} className="error-card">
+                      <div className="error-badge">{task.code}</div>
+                      <div className="error-info">
+                        <h4>{task.title}</h4>
+                        <span className="subject-tag">{task.subject}</span>
+                      </div>
+                      <button className="btn-solve" onClick={() => handleSolveError(task.id)}>
+                        Решить снова
+                      </button>
                     </div>
-                    <button className="btn-solve" onClick={() => handleSolveError(task.id)}>
-                      Решить снова
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <div className="empty-errors">🎉 Ошибок нет! Ты всё усвоил.</div>
-              )}
-            </div>
+                  ))
+                ) : (
+                  <div className="empty-errors">🎉 Ошибок нет!</div>
+                )}
+              </div>
+            )}
           </div>
         );
 
@@ -132,39 +168,34 @@ const DashboardLayout = () => {
         return (
           <div className="profile-section">
             <h2>Мой профиль</h2>
-            <p>Email: {user.email}</p>
-            <p>Роль: {user.role === 'teacher' ? 'Учитель' : 'Ученик'}</p>
+            <div className="profile-info-card">
+               <p><strong>Email:</strong> {user.email}</p>
+               <p><strong>Статус профиля:</strong> {user.is_profile_filled ? 'Заполнен' : 'Требует настройки'}</p>
+            </div>
           </div>
         );
 
       default:
-        return <h2>Раздел "{activeTab}" в разработке</h2>;
+        return <h2>Раздел в разработке</h2>;
     }
   };
 
   return (
     <div className="dashboard-wrapper">
+      {showSetup && (
+        <SetupProfileModal onSave={handleSaveProfile} />
+      )}
+
       <aside className="sidebar">
         <div className="sidebar-logo">Твой репетитор</div>
         <nav className="sidebar-nav">
           <ul>
-            <li className={activeTab === 'home' ? 'active' : ''} onClick={() => setActiveTab('home')}>
-              Главная
-            </li>
-            <li className={activeTab === 'homework-list' ? 'active' : ''} onClick={() => setActiveTab('homework-list')}>
-              Домашняя работа
-            </li>
+            <li className={activeTab === 'home' ? 'active' : ''} onClick={() => setActiveTab('home')}>Главная</li>
+            <li className={activeTab === 'homework-list' ? 'active' : ''} onClick={() => setActiveTab('homework-list')}>Домашняя работа</li>
             <li className={activeTab === 'homework-status' ? 'active' : ''} onClick={() => setActiveTab('homework-status')}>
               {user.role === 'teacher' ? 'Банк заданий' : 'Мои ошибки'}
             </li>
-            {user.role === 'teacher' && (
-              <li className={activeTab === 'students' ? 'active' : ''} onClick={() => setActiveTab('students')}>
-                Ученики
-              </li>
-            )}
-            <li className={activeTab === 'profile' ? 'active' : ''} onClick={() => setActiveTab('profile')}>
-              Профиль
-            </li>
+            <li className={activeTab === 'profile' ? 'active' : ''} onClick={() => setActiveTab('profile')}>Профиль</li>
           </ul>
         </nav>
         <button onClick={handleLogout} className="logout-btn">Выйти</button>

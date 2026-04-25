@@ -1,102 +1,129 @@
-/* src/components/Auth/AuthForm.jsx
-import { useState } from 'react';
-import './AuthForm.css';
+import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import '../components/SetupProfileModal/SetupProfileModal.css';
 
-export const AuthForm = ({ type, onSubmit }) => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [errors, setErrors] = useState({});
+const SetupProfileModal = ({ onSave }) => {
+  const { updateProfile } = useAuth();
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    examType: '',
+    selectedSubjects: []
+  });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const validate = () => {
-    const newErrors = {};
-    if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Некорректный email';
-    if (formData.password.length < 6) newErrors.password = 'Пароль от 6 символов';
-    return newErrors;
+  const subjects = {
+    oge: ['Математика', 'Информатика', 'Физика'],
+    ege: [
+      'Математика (профильный уровень)',
+      'Математика (базовый уровень)',
+      'Физика',
+      'Информатика'
+    ]
   };
 
-  const handleSubmit = (e) => {
+  const toggleSubject = (subject) => {
+    setFormData(prev => {
+      const isSelected = prev.selectedSubjects.includes(subject);
+      return {
+        ...prev,
+        selectedSubjects: isSelected
+          ? prev.selectedSubjects.filter(s => s !== subject)
+          : [...prev.selectedSubjects, subject]
+      };
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length === 0) {
-      onSubmit(formData);
+    setIsLoading(true);
+    setError('');
+
+    const result = await updateProfile({
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      exam_type: formData.examType,
+      subjects: formData.selectedSubjects,
+    });
+
+    setIsLoading(false);
+
+    if (result.success) {
+      onSave(formData);
     } else {
-      setErrors(validationErrors);
+      setError(result.message);
     }
   };
 
   return (
-    <form className="auth-form" onSubmit={handleSubmit}>
-      <h2 className="text-2xl font-bold mb-4">{type === 'login' ? 'Вход' : 'Регистрация'}</h2>
-      <input
-        type="email"
-        placeholder="Email"
-        className={errors.email ? 'error' : ''}
-        onChange={(e) => setFormData({...formData, email: e.target.value})}
-      />
-      {errors.email && <span className="error-text">{errors.email}</span>}
-      
-      <input
-        type="password"
-        placeholder="Пароль"
-        className={errors.password ? 'error' : ''}
-        onChange={(e) => setFormData({...formData, password: e.target.value})}
-      />
-      {errors.password && <span className="error-text">{errors.password}</span>}
+    <div className="modal-overlay">
+      <div className="modal setup-modal">
+        <h2 className="modal-title">Настройка профиля</h2>
+        <p className="modal-subtitle">Выберите тип экзамена и предметы для подготовки</p>
 
-      <button type="submit" className="btn-mint-gradient">
-        {type === 'login' ? 'Войти' : 'Создать аккаунт'}
-      </button>
-    </form>
-  );
-}; */
+        <form onSubmit={handleSubmit} className="modal-form">
+          <input
+            className="modal-input"
+            placeholder="Имя"
+            required
+            value={formData.firstName}
+            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+          />
+          <input
+            className="modal-input"
+            placeholder="Фамилия"
+            required
+            value={formData.lastName}
+            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+          />
 
+          <div className="role-picker">
+            <div
+              className={`role-option ${formData.examType === 'oge' ? 'role-option--active' : ''}`}
+              onClick={() => setFormData({ ...formData, examType: 'oge', selectedSubjects: [] })}
+            >
+              ОГЭ
+            </div>
+            <div
+              className={`role-option ${formData.examType === 'ege' ? 'role-option--active' : ''}`}
+              onClick={() => setFormData({ ...formData, examType: 'ege', selectedSubjects: [] })}
+            >
+              ЕГЭ
+            </div>
+          </div>
 
-// src/components/Auth/AuthForm.jsx
-import { useState } from 'react';
-import './AuthForm.css';
+          {formData.examType && (
+            <div className="subjects-selection">
+              <p className="label">Выберите один или несколько предметов:</p>
+              <div className="subjects-grid">
+                {subjects[formData.examType].map(sub => (
+                  <div
+                    key={sub}
+                    className={`subject-chip ${formData.selectedSubjects.includes(sub) ? 'selected' : ''}`}
+                    onClick={() => toggleSubject(sub)}
+                  >
+                    {sub}
+                    {formData.selectedSubjects.includes(sub) && <span className="check-icon">✓</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-export const AuthForm = ({ type, onSubmit }) => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [errors, setErrors] = useState({});
+          {error && <span className="modal-error">{error}</span>}
 
-  const validate = () => {
-    const newErrors = {};
-    if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Некорректный email';
-    if (formData.password.length < 6) newErrors.password = 'Пароль от 6 символов';
-    return newErrors;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length === 0) {
-      onSubmit(formData);
-    } else {
-      setErrors(validationErrors);
-    }
-  };
-
-  return (
-    <form className="auth-form" onSubmit={handleSubmit}>
-      <h2 className="text-2xl font-bold mb-4">{type === 'login' ? 'Вход' : 'Регистрация'}</h2>
-      <input
-        type="email"
-        placeholder="Email"
-        className={errors.email ? 'error' : ''}
-        onChange={(e) => setFormData({...formData, email: e.target.value})}
-      />
-      {errors.email && <span className="error-text">{errors.email}</span>}
-      
-      <input
-        type="password"
-        placeholder="Пароль"
-        className={errors.password ? 'error' : ''}
-        onChange={(e) => setFormData({...formData, password: e.target.value})}
-      />
-      {errors.password && <span className="error-text">{errors.password}</span>}
-
-      <button type="submit" className="btn-mint-gradient">
-        {type === 'login' ? 'Войти' : 'Создать аккаунт'}
-      </button>
-    </form>
+          <button
+            type="submit"
+            className="modal-submit"
+            disabled={isLoading || formData.selectedSubjects.length === 0 || !formData.firstName || !formData.lastName || !formData.examType}
+          >
+            {isLoading ? 'Сохранение...' : `Сохранить и начать (${formData.selectedSubjects.length})`}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 };
+
+export default SetupProfileModal;

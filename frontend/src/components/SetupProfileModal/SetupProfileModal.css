@@ -1,0 +1,52 @@
+.modal-subtitle {
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+}
+
+.subjects-selection {
+  margin-top: 10px;
+  text-align: left;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+.subjects-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.subject-chip {
+  padding: 8px 16px;
+  background: #f0f0f0;
+  border: 2px solid transparent;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.subject-chip:hover {
+  background: #e5e5e5;
+}
+
+.subject-chip.selected {
+  background: #e6faf2;
+  border-color: var(--brand-green);
+  color: #008a55;
+  font-weight: 600;
+}
+
+.check-icon {
+  font-weight: bold;
+}

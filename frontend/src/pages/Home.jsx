@@ -1,10 +1,21 @@
-import { useState } from 'react';
-import Navbar from '../components/Navbar';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import Navbar from '../components/Navbar/Navbar';
 import WaveLayout from '../components/WaveLayout';
 import AuthModal from '../components/AuthModal';
 
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // Автоматический редирект, если пользователь вошел
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
     <div className="app-wrapper">
