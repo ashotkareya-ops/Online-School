@@ -1,10 +1,11 @@
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import UserSerializer, SetupProfileSerializer
+from .models import User
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
@@ -28,3 +29,25 @@ def setup_profile(request):
         user = serializer.save()
         return Response(UserSerializer(user).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register(request):
+    email = request.data.get('email')
+    username = request.data.get('username')
+    password = request.data.get('password')
+    role = request.data.get('role', 'student')
+
+    if not email or not password or not username:
+        return Response({'error': 'Заполните все поля'}, status=400)
+
+    if User.objects.filter(email=email).exists():
+        return Response({'email': ['Пользователь с таким email уже существует']}, status=400)
+
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        password=password,
+        role=role
+    )
+    return Response(UserSerializer(user).data, status=201)

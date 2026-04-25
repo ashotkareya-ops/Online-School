@@ -41,29 +41,8 @@ const DashboardLayout = () => {
     navigate('/');
   };
 
-  const handleSaveProfile = async (data) => {
-    try {
-      // Здесь будет реальный fetch запрос к твоему Django API
-      console.log("Отправка данных на сервер Django:", data);
-      
-      /* ПРИМЕР ЗАПРОСА:
-      const response = await fetch('http://127.0.0.1:8000/api/setup-profile/', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
-        body: JSON.stringify(data)
-      });
-      if (response.ok) { setShowSetup(false); }
-      */
-
-      // Пока эмулируем успех:
-      setShowSetup(false);
-      alert("Профиль успешно обновлен!");
-    } catch (error) {
-      alert("Ошибка при сохранении профиля");
-    }
+  const handleSaveProfile = async (data) =>{
+    setShowSetup(false);
   };
 
   const handleSolveError = (id) => {
