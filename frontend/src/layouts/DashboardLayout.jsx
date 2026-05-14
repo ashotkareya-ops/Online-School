@@ -1,28 +1,73 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import SetupProfileModal from '../components/AuthForm';
+import SetupProfileModal from '../components/SetupProfileModal/SetupProfileModal';
 import './DashboardLayout.css';
+
+const EXAM_LABELS = { oge: 'ОГЭ', ege: 'ЕГЭ' };
+
+const PendingBanner = () => (
+  <div style={{
+    background: 'linear-gradient(135deg, rgba(255, 193, 7, 0.12), rgba(255, 152, 0, 0.08))',
+    border: '1px solid rgba(255, 193, 7, 0.4)',
+    borderRadius: '16px',
+    padding: '20px 24px',
+    marginBottom: '24px',
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '16px',
+  }}>
+    <span style={{ fontSize: '28px', flexShrink: 0 }}>⏳</span>
+    <div>
+      <p style={{ margin: '0 0 6px', fontWeight: '700', fontSize: '16px', color: '#92600a' }}>
+        Аккаунт на проверке
+      </p>
+      <p style={{ margin: '0 0 10px', fontSize: '14px', color: '#7a5212', lineHeight: '1.6' }}>
+        Администратор проверит вашу заявку и подтвердит аккаунт. Обычно это занимает до 24 часов.
+      </p>
+      <div style={{
+        background: 'rgba(255,255,255,0.6)',
+        borderRadius: '10px',
+        padding: '10px 14px',
+        fontSize: '13px',
+        color: '#555',
+        lineHeight: '1.7',
+      }}>
+        <strong>После подтверждения вы сможете:</strong><br />
+        — Заполнить профиль: имя, предметы, тип экзамена<br />
+        — Получить персональный код для учеников<br />
+        — Создавать и проверять домашние задания
+      </div>
+    </div>
+  </div>
+);
 
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('home'); 
+  const [activeTab, setActiveTab] = useState('home');
   const [activeSubject, setActiveSubject] = useState('Все');
-  
-  // БЕЗОПАСНОСТЬ: Теперь мы не смотрим в localStorage.
-  // Модалка показывается только если роль 'student' И сервер говорит, что профиль не заполнен.
   const [showSetup, setShowSetup] = useState(false);
 
+  // Учитель, который ещё не подтверждён
+  const isPendingTeacher = user?.role === 'teacher' && !user?.is_approved;
+
   useEffect(() => {
-    if (user && user.role === 'student' && !user.is_profile_filled) {
+    if (!user) return;
+    // Сбрасываем на главную, если учитель не подтверждён
+    if (isPendingTeacher) {
+      setActiveTab('home');
+      return;
+    }
+    if (user.role === 'student' && !user.is_profile_filled) {
+      setShowSetup(true);
+    } else if (user.role === 'teacher' && user.is_approved && !user.is_profile_filled) {
       setShowSetup(true);
     } else {
       setShowSetup(false);
     }
-  }, [user]);
+  }, [user, isPendingTeacher]);
 
-  // --- ДАННЫЕ (В будущем будут приходить с бэкенда через fetch) ---
   const [errorTasks, setErrorTasks] = useState([
     { id: 101, code: 'ЕГЭ №1', title: 'Вычисления по формулам', subject: 'Математика' },
     { id: 105, code: 'ОГЭ №9', title: 'Линейные уравнения', subject: 'Математика' },
@@ -41,33 +86,53 @@ const DashboardLayout = () => {
     navigate('/');
   };
 
-  const handleSaveProfile = async (data) =>{
+  const handleSaveProfile = async () => {
     setShowSetup(false);
   };
 
   const handleSolveError = (id) => {
     setErrorTasks(prev => prev.filter(task => task.id !== id));
-    alert("Задание решено верно!");
+    alert('Задание решено верно!');
+  };
+
+  // Обработчик клика по вкладке: заблокированные вкладки не переключаются
+  const handleTabClick = (tab) => {
+    if (isPendingTeacher && tab !== 'home' && tab !== 'profile') return;
+    setActiveTab(tab);
   };
 
   if (!user) return <div className="loading">Загрузка...</div>;
+
+  // Вкладки сайдбара
+  const navItems = [
+    { key: 'home', label: 'Главная' },
+    { key: 'homework-list', label: 'Домашняя работа' },
+    { key: 'homework-status', label: user.role === 'teacher' ? 'Банк заданий' : 'Мои ошибки' },
+    { key: 'profile', label: 'Профиль' },
+  ];
 
   const renderContent = () => {
     switch (activeTab) {
       case 'home':
         return (
           <div className="main-container">
+            {/* Баннер ожидания — только для неподтверждённого учителя */}
+            {isPendingTeacher && <PendingBanner />}
+
             <h2>Добро пожаловать, {user.username || user.email}!</h2>
-            <p>Выберите раздел в меню слева, чтобы приступить к работе.</p>
+            <p>
+              {isPendingTeacher
+                ? 'Пока аккаунт не подтверждён, доступ к разделам ограничен.'
+                : 'Выберите раздел в меню слева, чтобы приступить к работе.'}
+            </p>
           </div>
         );
 
-      case 'homework-list':
+      case 'homework-list': {
         const subjects = ['Все', 'Математика', 'Программирование'];
-        const filteredBySubject = activeSubject === 'Все' 
-          ? homeworks 
+        const filteredBySubject = activeSubject === 'Все'
+          ? homeworks
           : homeworks.filter(h => h.subject === activeSubject);
-
         const todoTasks = filteredBySubject.filter(h => h.status === 'todo');
         const reviewTasks = filteredBySubject.filter(h => h.status === 'review');
 
@@ -83,10 +148,9 @@ const DashboardLayout = () => {
                 <span className="stat-value">{reviewTasks.length}</span>
               </div>
             </div>
-
             <div className="tabs-header">
               {subjects.map(subject => (
-                <button 
+                <button
                   key={subject}
                   className={`tab-button ${activeSubject === subject ? 'active' : ''}`}
                   onClick={() => setActiveSubject(subject)}
@@ -95,7 +159,6 @@ const DashboardLayout = () => {
                 </button>
               ))}
             </div>
-
             <div className="homework-grid">
               <div className="homework-column">
                 <h3 className="column-title">Не сделанные</h3>
@@ -112,6 +175,7 @@ const DashboardLayout = () => {
             </div>
           </div>
         );
+      }
 
       case 'homework-status':
         return (
@@ -119,7 +183,6 @@ const DashboardLayout = () => {
             <div className="error-header">
               <h2>{user.role === 'teacher' ? 'Банк заданий' : 'Мои ошибки'}</h2>
             </div>
-            
             {user.role === 'student' && (
               <div className="error-list">
                 {errorTasks.length > 0 ? (
@@ -143,46 +206,59 @@ const DashboardLayout = () => {
           </div>
         );
 
-     case 'profile':
-      return (
-        <div className="profile-section">
-          <h2>Мой профиль</h2>
-          <div className="profile-info-card">
-            <p><strong>Email:</strong> {user.email}</p>
-            <p><strong>Имя:</strong> {user.first_name || '—'}</p>
-            <p><strong>Фамилия:</strong> {user.last_name || '—'}</p>
-            <p><strong>Роль:</strong> {user.role === 'teacher' ? 'Учитель' : 'Ученик'}</p>
-            
-            {/* Для учителя — показываем код */}
-            {user.role === 'teacher' && (
-              <div style={{
-                marginTop: '15px',
-                padding: '15px',
-                background: 'rgba(0,208,132,0.1)',
-                borderRadius: '12px',
-                border: '2px solid #00d084'
-              }}>
-                <p style={{ marginBottom: '5px' }}><strong>Ваш код для учеников:</strong></p>
-                <span style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '3px', color: '#00d084' }}>
-                  {user.teacher_code}
-                </span>
-                <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                  Учеников подключено: {user.students_count || 0}
-                </p>
-              </div>
-            )}
+      case 'profile':
+        return (
+          <div className="profile-section">
+            <h2>Мой профиль</h2>
+            <div className="profile-info-card">
+              <p><strong>Email:</strong> {user.email}</p>
+              <p><strong>Имя:</strong> {user.first_name || '—'}</p>
+              <p><strong>Фамилия:</strong> {user.last_name || '—'}</p>
+              <p><strong>Роль:</strong> {user.role === 'teacher' ? 'Учитель' : 'Ученик'}</p>
 
-            {/* Для ученика — показываем предметы и экзамен */}
-            {user.role === 'student' && (
-              <div style={{ marginTop: '15px' }}>
-                <p><strong>Экзамен:</strong> {user.exam_type ? (user.exam_type === 'oge' ? 'ОГЭ' : 'ЕГЭ') : '—'}</p>
-                <p><strong>Предметы:</strong> {user.subjects?.length > 0 ? user.subjects.join(', ') : '—'}</p>
-                <p><strong>Статус профиля:</strong> {user.is_profile_filled ? '✅ Заполнен' : '⚠️ Требует настройки'}</p>
-              </div>
-            )}
+              {user.role === 'teacher' && user.is_approved && (
+                <div style={{
+                  marginTop: '15px',
+                  padding: '15px',
+                  background: 'rgba(0,208,132,0.1)',
+                  borderRadius: '12px',
+                  border: '2px solid #00d084',
+                }}>
+                  <p style={{ marginBottom: '5px' }}><strong>Ваш код для учеников:</strong></p>
+                  <span style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '3px', color: '#00d084' }}>
+                    {user.teacher_code}
+                  </span>
+                  <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                    Учеников подключено: {user.students_count || 0}
+                  </p>
+                </div>
+              )}
+
+              {user.role === 'teacher' && !user.is_approved && (
+                <div style={{
+                  marginTop: '15px',
+                  padding: '14px 16px',
+                  background: 'rgba(255,193,7,0.1)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,193,7,0.4)',
+                  fontSize: '14px',
+                  color: '#92600a',
+                }}>
+                  ⏳ Аккаунт ожидает подтверждения администратором
+                </div>
+              )}
+
+              {user.role === 'student' && (
+                <div style={{ marginTop: '15px' }}>
+                  <p><strong>Экзамен:</strong> {user.exam_type?.length > 0 ? user.exam_type.map(t => EXAM_LABELS[t] || t).join(', ') : '—'}</p>
+                  <p><strong>Предметы:</strong> {user.subjects?.length > 0 ? user.subjects.join(', ') : '—'}</p>
+                  <p><strong>Статус профиля:</strong> {user.is_profile_filled ? '✅ Заполнен' : '⚠️ Требует настройки'}</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      );
+        );
+
       default:
         return <h2>Раздел в разработке</h2>;
     }
@@ -198,12 +274,30 @@ const DashboardLayout = () => {
         <div className="sidebar-logo">Твой репетитор</div>
         <nav className="sidebar-nav">
           <ul>
-            <li className={activeTab === 'home' ? 'active' : ''} onClick={() => setActiveTab('home')}>Главная</li>
-            <li className={activeTab === 'homework-list' ? 'active' : ''} onClick={() => setActiveTab('homework-list')}>Домашняя работа</li>
-            <li className={activeTab === 'homework-status' ? 'active' : ''} onClick={() => setActiveTab('homework-status')}>
-              {user.role === 'teacher' ? 'Банк заданий' : 'Мои ошибки'}
-            </li>
-            <li className={activeTab === 'profile' ? 'active' : ''} onClick={() => setActiveTab('profile')}>Профиль</li>
+            {navItems.map(({ key, label }) => {
+              const isLocked = isPendingTeacher && key !== 'home' && key !== 'profile';
+              return (
+                <li
+                  key={key}
+                  className={activeTab === key ? 'active' : ''}
+                  onClick={() => handleTabClick(key)}
+                  style={isLocked ? {
+                    opacity: 0.4,
+                    cursor: 'not-allowed',
+                    userSelect: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  } : {}}
+                  title={isLocked ? 'Доступно после подтверждения аккаунта' : ''}
+                >
+                  {label}
+                  {isLocked && (
+                    <span style={{ fontSize: '13px', marginLeft: '6px' }}>🔒</span>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </nav>
         <button onClick={handleLogout} className="logout-btn">Выйти</button>
@@ -216,6 +310,19 @@ const DashboardLayout = () => {
             <span className="role-badge">
               {user.role === 'teacher' ? 'Преподаватель' : 'Студент'}
             </span>
+            {isPendingTeacher && (
+              <span style={{
+                background: 'rgba(255,193,7,0.2)',
+                color: '#92600a',
+                fontSize: '12px',
+                fontWeight: '600',
+                padding: '4px 12px',
+                borderRadius: '20px',
+                border: '1px solid rgba(255,193,7,0.4)',
+              }}>
+                ⏳ На проверке
+              </span>
+            )}
           </div>
         </header>
 

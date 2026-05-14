@@ -1,163 +1,283 @@
 import React, { useState, useMemo } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import './SetupProfileModal.css';
 
-const SetupProfileModal = ({ onSave }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const SUBJECTS = {
+  oge: ['Математика', 'Информатика', 'Физика', 'Химия', 'Биология'],
+  ege: [
+    'Математика (профильный)',
+    'Математика (базовый)',
+    'Физика',
+    'Информатика',
+    'Химия',
+    'Биология',
+  ],
+};
+
+const EXAM_LABELS = { oge: 'ОГЭ', ege: 'ЕГЭ' };
+
+// ─── Форма ученика ────────────────────────────────────────────────────────────
+const StudentForm = ({ onSave }) => {
+  const { updateProfile } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     examType: '',
-    selectedSubjects: [],
-    teacherCode: ''
+    subjects: [],
   });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Список предметов выносим в useMemo, чтобы не пересоздавать при каждом рендере
-  const subjects = useMemo(() => ({
-    oge: ['Математика', 'Информатика', 'Физика'],
-    ege: [
-      'Математика (профильный уровень)', 
-      'Математика (базовый уровень)', 
-      'Физика', 
-      'Информатика'
-    ]
-  }), []);
+  const availableSubjects = formData.examType ? SUBJECTS[formData.examType] : [];
 
-  const toggleSubject = (subject) => {
-    // Безопасное переключение предметов
+  const toggleSubject = (sub) => {
+    setFormData(prev => ({
+      ...prev,
+      subjects: prev.subjects.includes(sub)
+        ? prev.subjects.filter(s => s !== sub)
+        : [...prev.subjects, sub],
+    }));
+  };
+
+  const isValid =
+    formData.firstName.trim().length >= 2 &&
+    formData.lastName.trim().length >= 2 &&
+    formData.examType !== '' &&
+    formData.subjects.length > 0;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+    const result = await updateProfile({
+      first_name: formData.firstName.trim(),
+      last_name: formData.lastName.trim(),
+      exam_type: [formData.examType],
+      subjects: formData.subjects,
+    });
+    setIsLoading(false);
+    if (result.success) {
+      onSave();
+    } else {
+      setError(result.message);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="modal-form">
+      <input
+        className="modal-input"
+        placeholder="Имя"
+        maxLength={50}
+        required
+        value={formData.firstName}
+        onChange={e => setFormData({ ...formData, firstName: e.target.value })}
+      />
+      <input
+        className="modal-input"
+        placeholder="Фамилия"
+        maxLength={50}
+        required
+        value={formData.lastName}
+        onChange={e => setFormData({ ...formData, lastName: e.target.value })}
+      />
+
+      <p className="label">Тип экзамена:</p>
+      <div className="role-picker">
+        {['oge', 'ege'].map(type => (
+          <div
+            key={type}
+            className={`role-option ${formData.examType === type ? 'role-option--active' : ''}`}
+            onClick={() => setFormData({ ...formData, examType: type, subjects: [] })}
+          >
+            {EXAM_LABELS[type]}
+          </div>
+        ))}
+      </div>
+
+      {formData.examType && (
+        <div className="subjects-selection">
+          <p className="label">Предметы:</p>
+          <div className="subjects-grid">
+            {availableSubjects.map(sub => (
+              <div
+                key={sub}
+                className={`subject-chip ${formData.subjects.includes(sub) ? 'selected' : ''}`}
+                onClick={() => toggleSubject(sub)}
+              >
+                {sub}
+                {formData.subjects.includes(sub) && <span className="check-icon">✓</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {error && <span className="modal-error">{error}</span>}
+
+      <button
+        type="submit"
+        className="modal-submit"
+        disabled={isLoading || !isValid}
+      >
+        {isLoading ? 'Сохранение...' : `Сохранить и начать (${formData.subjects.length})`}
+      </button>
+    </form>
+  );
+};
+
+// ─── Форма учителя ────────────────────────────────────────────────────────────
+const TeacherForm = ({ onSave }) => {
+  const { updateProfile } = useAuth();
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    examTypes: [],
+    subjects: [],
+  });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const availableSubjects = useMemo(() => {
+    if (formData.examTypes.length === 0) return [];
+    const subs = new Set();
+    formData.examTypes.forEach(t => SUBJECTS[t]?.forEach(s => subs.add(s)));
+    return [...subs];
+  }, [formData.examTypes]);
+
+  const toggleExamType = (type) => {
     setFormData(prev => {
-      const isSelected = prev.selectedSubjects.includes(subject);
+      const newTypes = prev.examTypes.includes(type)
+        ? prev.examTypes.filter(t => t !== type)
+        : [...prev.examTypes, type];
+      const newAvailable = new Set();
+      newTypes.forEach(t => SUBJECTS[t]?.forEach(s => newAvailable.add(s)));
       return {
         ...prev,
-        selectedSubjects: isSelected
-          ? prev.selectedSubjects.filter(s => s !== subject)
-          : [...prev.selectedSubjects, subject]
+        examTypes: newTypes,
+        subjects: prev.subjects.filter(s => newAvailable.has(s)),
       };
     });
   };
 
+  const toggleSubject = (sub) => {
+    setFormData(prev => ({
+      ...prev,
+      subjects: prev.subjects.includes(sub)
+        ? prev.subjects.filter(s => s !== sub)
+        : [...prev.subjects, sub],
+    }));
+  };
+
+  const isValid =
+    formData.firstName.trim().length >= 2 &&
+    formData.lastName.trim().length >= 2 &&
+    formData.examTypes.length > 0 &&
+    formData.subjects.length > 0;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // БЕЗОПАСНОСТЬ: Валидация перед отправкой
-    const cleanFirstName = formData.firstName.trim();
-    const cleanLastName = formData.lastName.trim();
-    const cleanTeacherCode = formData.teacherCode.trim().toUpperCase();
-
-    if (cleanFirstName.length < 2 || cleanLastName.length < 2) {
-      alert("Имя и фамилия слишком короткие");
-      return;
-    }
-
-    if (formData.selectedSubjects.length === 0) {
-      alert("Выберите хотя бы один предмет");
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    try {
-      // Подготовка безопасного объекта для Django
-      const finalData = {
-        firstName: cleanFirstName,
-        lastName: cleanLastName,
-        examType: formData.examType,
-        selectedSubjects: formData.selectedSubjects,
-        teacherCode: cleanTeacherCode || null
-      };
-
-      await onSave(finalData);
-    } catch (error) {
-      console.error("Ошибка сохранения профиля:", error);
-      alert("Произошла ошибка при сохранении. Попробуйте позже.");
-    } finally {
-      setIsSubmitting(false);
+    setError('');
+    setIsLoading(true);
+    const result = await updateProfile({
+      first_name: formData.firstName.trim(),
+      last_name: formData.lastName.trim(),
+      exam_type: formData.examTypes,
+      subjects: formData.subjects,
+    });
+    setIsLoading(false);
+    if (result.success) {
+      onSave();
+    } else {
+      setError(result.message);
     }
   };
 
-  // Проверка валидности формы для активации кнопки
-  const isFormValid = 
-    formData.firstName.trim().length >= 2 && 
-    formData.lastName.trim().length >= 2 && 
-    formData.examType !== '' &&
-    formData.selectedSubjects.length > 0 &&
-    !isSubmitting;
+  return (
+    <form onSubmit={handleSubmit} className="modal-form">
+      <input
+        className="modal-input"
+        placeholder="Имя"
+        maxLength={50}
+        required
+        value={formData.firstName}
+        onChange={e => setFormData({ ...formData, firstName: e.target.value })}
+      />
+      <input
+        className="modal-input"
+        placeholder="Фамилия"
+        maxLength={50}
+        required
+        value={formData.lastName}
+        onChange={e => setFormData({ ...formData, lastName: e.target.value })}
+      />
+
+      <p className="label">Какие экзамены преподаёте? (можно оба)</p>
+      <div className="role-picker">
+        {['oge', 'ege'].map(type => (
+          <div
+            key={type}
+            className={`role-option ${formData.examTypes.includes(type) ? 'role-option--active' : ''}`}
+            onClick={() => toggleExamType(type)}
+          >
+            {EXAM_LABELS[type]}
+            {formData.examTypes.includes(type) && <span className="check-icon"> ✓</span>}
+          </div>
+        ))}
+      </div>
+
+      {availableSubjects.length > 0 && (
+        <div className="subjects-selection">
+          <p className="label">Предметы которые преподаёте:</p>
+          <div className="subjects-grid">
+            {availableSubjects.map(sub => (
+              <div
+                key={sub}
+                className={`subject-chip ${formData.subjects.includes(sub) ? 'selected' : ''}`}
+                onClick={() => toggleSubject(sub)}
+              >
+                {sub}
+                {formData.subjects.includes(sub) && <span className="check-icon">✓</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {error && <span className="modal-error">{error}</span>}
+
+      <button
+        type="submit"
+        className="modal-submit"
+        disabled={isLoading || !isValid}
+      >
+        {isLoading ? 'Сохранение...' : `Сохранить (${formData.subjects.length} предм.)`}
+      </button>
+    </form>
+  );
+};
+
+// ─── Главный компонент ────────────────────────────────────────────────────────
+const SetupProfileModal = ({ onSave }) => {
+  const { user } = useAuth();
+  const isTeacher = user?.role === 'teacher';
 
   return (
     <div className="modal-overlay">
       <div className="modal setup-modal">
-        <h2 className="modal-title">Настройка профиля</h2>
-        <p className="modal-subtitle">Заполните данные для начала обучения</p>
+        <h2 className="modal-title">
+          {isTeacher ? 'Настройка профиля преподавателя' : 'Настройка профиля'}
+        </h2>
+        <p className="modal-subtitle">
+          {isTeacher
+            ? 'Укажите ваши данные и предметы которые вы преподаёте'
+            : 'Выберите тип экзамена и предметы для подготовки'}
+        </p>
 
-        <form onSubmit={handleSubmit} className="modal-form">
-          <input
-            className="modal-input"
-            placeholder="Имя"
-            maxLength={50}
-            required
-            value={formData.firstName}
-            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-          />
-          <input
-            className="modal-input"
-            placeholder="Фамилия"
-            maxLength={50}
-            required
-            value={formData.lastName}
-            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-          />
-
-          <div className="role-picker">
-            <button
-              type="button"
-              className={`role-option ${formData.examType === 'oge' ? 'role-option--active' : ''}`}
-              onClick={() => setFormData({ ...formData, examType: 'oge', selectedSubjects: [] })}
-            >
-              ОГЭ
-            </button>
-            <button
-              type="button"
-              className={`role-option ${formData.examType === 'ege' ? 'role-option--active' : ''}`}
-              onClick={() => setFormData({ ...formData, examType: 'ege', selectedSubjects: [] })}
-            >
-              ЕГЭ
-            </button>
-          </div>
-
-          {formData.examType && (
-            <div className="subjects-selection">
-              <p className="label">Выберите предметы:</p>
-              <div className="subjects-grid">
-                {subjects[formData.examType].map(sub => (
-                  <div 
-                    key={sub} 
-                    className={`subject-chip ${formData.selectedSubjects.includes(sub) ? 'selected' : ''}`}
-                    onClick={() => toggleSubject(sub)}
-                  >
-                    {sub}
-                    {formData.selectedSubjects.includes(sub) && <span className="check-icon">✓</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <input
-            className="modal-input teacher-code-input"
-            placeholder="Код учителя (если есть)"
-            maxLength={12}
-            value={formData.teacherCode}
-            onChange={(e) => setFormData({ ...formData, teacherCode: e.target.value })}
-            style={{ marginTop: '15px' }}
-          />
-
-          <button 
-            type="submit" 
-            className="modal-submit"
-            disabled={!isFormValid}
-          >
-            {isSubmitting ? "Сохранение..." : `Сохранить и начать (${formData.selectedSubjects.length})`}
-          </button>
-        </form>
+        {isTeacher
+          ? <TeacherForm onSave={onSave} />
+          : <StudentForm onSave={onSave} />
+        }
       </div>
     </div>
   );

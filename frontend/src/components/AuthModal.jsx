@@ -16,19 +16,14 @@ const AuthModal = ({ isOpen, onClose }) => {
   const [teacherCode, setTeacherCode] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showTeacherCode, setShowTeacherCode] = useState(null);
 
   if (!isOpen) return null;
 
   const passwordsMatch = isLogin || (password !== '' && password === confirmPassword);
 
   const resetForm = () => {
-    setUsername('');
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setTeacherCode('');
-    setError('');
+    setUsername(''); setEmail(''); setPassword('');
+    setConfirmPassword(''); setTeacherCode(''); setError('');
   };
 
   const handleSwitch = () => {
@@ -37,12 +32,7 @@ const AuthModal = ({ isOpen, onClose }) => {
   };
 
   const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget && !showTeacherCode) onClose();
-  };
-
-  const handleTeacherCodeClose = () => {
-    setShowTeacherCode(null);
-    navigate('/dashboard');
+    if (e.target === e.currentTarget) onClose();
   };
 
   const handleSubmit = async (e) => {
@@ -53,11 +43,6 @@ const AuthModal = ({ isOpen, onClose }) => {
     if (!isLogin) {
       if (!passwordsMatch) {
         setError('Пароли не совпадают');
-        setIsLoading(false);
-        return;
-      }
-      if (password.length < 8) {
-        setError('Пароль должен быть не менее 8 символов');
         setIsLoading(false);
         return;
       }
@@ -81,15 +66,15 @@ const AuthModal = ({ isOpen, onClose }) => {
       } else {
         const result = await register({ username, email, password, role, teacher_code: teacherCode });
         if (result.success) {
+          // И учитель, и ученик — сразу логинимся и переходим в дашборд
+          // Учитель увидит экран ожидания уже внутри дашборда
           const loginResult = await login(email, password);
           if (loginResult.success) {
             resetForm();
             onClose();
-            if (role === 'teacher' && result.teacher_code) {
-              setShowTeacherCode(result.teacher_code);
-            } else {
-              navigate('/dashboard');
-            }
+            navigate('/dashboard');
+          } else {
+            setError('Аккаунт создан, но войти не удалось. Попробуйте войти вручную.');
           }
         } else {
           setError(result.message || 'Произошла ошибка');
@@ -101,40 +86,6 @@ const AuthModal = ({ isOpen, onClose }) => {
       setIsLoading(false);
     }
   };
-
-  // Модалка с кодом учителя
-  if (showTeacherCode) {
-    return (
-      <div className="modal-overlay">
-        <div className="modal" style={{ textAlign: 'center' }}>
-          <h2 className="modal-title">🎉 Вы зарегистрированы!</h2>
-          <p style={{ color: '#444', marginBottom: '10px' }}>
-            Ваш персональный код для учеников:
-          </p>
-          <div style={{
-            background: 'rgba(0,208,132,0.15)',
-            border: '2px solid #00d084',
-            borderRadius: '15px',
-            padding: '20px',
-            margin: '15px 0',
-            fontSize: '28px',
-            fontWeight: '800',
-            letterSpacing: '4px',
-            color: '#00d084'
-          }}>
-            {showTeacherCode}
-          </div>
-          <p style={{ color: '#666', fontSize: '13px', marginBottom: '20px' }}>
-            Сохраните этот код! Ученики будут вводить его при регистрации.<br />
-            Вы также найдёте его в своём профиле.
-          </p>
-          <button className="modal-submit" onClick={handleTeacherCodeClose}>
-            Перейти в кабинет
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
@@ -188,14 +139,7 @@ const AuthModal = ({ isOpen, onClose }) => {
               <div className="role-picker">
                 {['student', 'teacher'].map(r => (
                   <label key={r} className={`role-option ${role === r ? 'role-option--active' : ''}`}>
-                    <input
-                      type="radio"
-                      name="role"
-                      value={r}
-                      checked={role === r}
-                      onChange={() => setRole(r)}
-                      hidden
-                    />
+                    <input type="radio" name="role" value={r} checked={role === r} onChange={() => setRole(r)} hidden />
                     {r === 'student' ? 'Ученик' : 'Учитель'}
                   </label>
                 ))}
@@ -211,6 +155,12 @@ const AuthModal = ({ isOpen, onClose }) => {
                   maxLength={10}
                   required
                 />
+              )}
+
+              {role === 'teacher' && (
+                <p style={{ fontSize: '13px', color: '#888', margin: '4px 0 8px', lineHeight: '1.5' }}>
+                  После регистрации аккаунт будет проверен администратором. Вы сразу попадёте в личный кабинет.
+                </p>
               )}
             </>
           )}
