@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar/Navbar';
-import WaveLayout from '../components/WaveLayout';
-import AuthModal from '../components/AuthModal';
+import WaveLayout from '../layouts/WaveLayout';
+import AuthModal from '../components/Auth/AuthModal';
 
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);

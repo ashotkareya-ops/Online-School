@@ -68,14 +68,11 @@
   border-color: #ff4d4d;
 }
 
-/* Маскировка пароля через CSS вместо type="password"
-   — полностью убирает иконку менеджера паролей браузера */
 .modal-input--password {
   -webkit-text-security: disc;
   text-security: disc;
 }
 
-/* Убираем автозаполнение фон */
 .modal-input:-webkit-autofill,
 .modal-input:-webkit-autofill:hover,
 .modal-input:-webkit-autofill:focus {

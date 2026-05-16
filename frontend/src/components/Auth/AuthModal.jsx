@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import './AuthModal.css';
 
@@ -40,7 +40,6 @@ const AuthModal = ({ isOpen, onClose }) => {
     if (e.target === e.currentTarget) onClose();
   };
 
-  // Отдельный обработчик смены роли — сбрасывает код учителя
   const handleRoleChange = (newRole) => {
     setRole(newRole);
     setTeacherCode('');
@@ -76,9 +75,7 @@ const AuthModal = ({ isOpen, onClose }) => {
           setError(result.message || 'Произошла ошибка');
         }
       } else {
-        // Явно формируем данные — role гарантированно 'teacher' или 'student'
         const selectedRole = role === 'teacher' ? 'teacher' : 'student';
-        // Учителю отправляем пустой код — бэкенд его не требует
         const selectedTeacherCode = selectedRole === 'student' ? teacherCode.trim().toUpperCase() : '';
 
         const result = await register({
@@ -90,8 +87,6 @@ const AuthModal = ({ isOpen, onClose }) => {
         });
 
         if (result.success) {
-          // Оба — учитель и ученик — сразу логинятся
-          // Учитель увидит баннер ожидания внутри дашборда
           const loginResult = await login(email.trim().toLowerCase(), password);
           if (loginResult.success) {
             resetForm();
@@ -244,4 +239,4 @@ const AuthModal = ({ isOpen, onClose }) => {
   );
 };
 
-export default AuthModal;
+export default AuthModal; 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import '../components/SetupProfileModal/SetupProfileModal.css';
 
 const SetupProfileModal = ({ onSave }) => {
