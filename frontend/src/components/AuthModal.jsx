@@ -22,8 +22,13 @@ const AuthModal = ({ isOpen, onClose }) => {
   const passwordsMatch = isLogin || (password !== '' && password === confirmPassword);
 
   const resetForm = () => {
-    setUsername(''); setEmail(''); setPassword('');
-    setConfirmPassword(''); setTeacherCode(''); setError('');
+    setUsername('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setTeacherCode('');
+    setError('');
+    setRole('student');
   };
 
   const handleSwitch = () => {
@@ -33,6 +38,13 @@ const AuthModal = ({ isOpen, onClose }) => {
 
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) onClose();
+  };
+
+  // Отдельный обработчик смены роли — сбрасывает код учителя
+  const handleRoleChange = (newRole) => {
+    setRole(newRole);
+    setTeacherCode('');
+    setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -64,17 +76,29 @@ const AuthModal = ({ isOpen, onClose }) => {
           setError(result.message || 'Произошла ошибка');
         }
       } else {
-        const result = await register({ username, email, password, role, teacher_code: teacherCode });
+        // Явно формируем данные — role гарантированно 'teacher' или 'student'
+        const selectedRole = role === 'teacher' ? 'teacher' : 'student';
+        // Учителю отправляем пустой код — бэкенд его не требует
+        const selectedTeacherCode = selectedRole === 'student' ? teacherCode.trim().toUpperCase() : '';
+
+        const result = await register({
+          username: username.trim(),
+          email: email.trim().toLowerCase(),
+          password,
+          role: selectedRole,
+          teacher_code: selectedTeacherCode,
+        });
+
         if (result.success) {
-          // И учитель, и ученик — сразу логинимся и переходим в дашборд
-          // Учитель увидит экран ожидания уже внутри дашборда
-          const loginResult = await login(email, password);
+          // Оба — учитель и ученик — сразу логинятся
+          // Учитель увидит баннер ожидания внутри дашборда
+          const loginResult = await login(email.trim().toLowerCase(), password);
           if (loginResult.success) {
             resetForm();
             onClose();
             navigate('/dashboard');
           } else {
-            setError('Аккаунт создан, но войти не удалось. Попробуйте войти вручную.');
+            setError('Аккаунт создан! Попробуйте войти вручную.');
           }
         } else {
           setError(result.message || 'Произошла ошибка');
@@ -87,6 +111,11 @@ const AuthModal = ({ isOpen, onClose }) => {
     }
   };
 
+  const isSubmitDisabled =
+    isLoading ||
+    !passwordsMatch ||
+    (!isLogin && !username.trim());
+
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
       <div className="modal">
@@ -94,6 +123,7 @@ const AuthModal = ({ isOpen, onClose }) => {
         <h2 className="modal-title">{isLogin ? 'Вход' : 'Регистрация'}</h2>
 
         <form className="modal-form" onSubmit={handleSubmit} autoComplete="off">
+
           {!isLogin && (
             <input
               type="text"
@@ -136,15 +166,33 @@ const AuthModal = ({ isOpen, onClose }) => {
                 required
               />
 
+              {/* Выбор роли */}
               <div className="role-picker">
-                {['student', 'teacher'].map(r => (
-                  <label key={r} className={`role-option ${role === r ? 'role-option--active' : ''}`}>
-                    <input type="radio" name="role" value={r} checked={role === r} onChange={() => setRole(r)} hidden />
-                    {r === 'student' ? 'Ученик' : 'Учитель'}
-                  </label>
-                ))}
+                <label className={`role-option ${role === 'student' ? 'role-option--active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="role"
+                    value="student"
+                    checked={role === 'student'}
+                    onChange={() => handleRoleChange('student')}
+                    hidden
+                  />
+                  Ученик
+                </label>
+                <label className={`role-option ${role === 'teacher' ? 'role-option--active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="role"
+                    value="teacher"
+                    checked={role === 'teacher'}
+                    onChange={() => handleRoleChange('teacher')}
+                    hidden
+                  />
+                  Учитель
+                </label>
               </div>
 
+              {/* Код учителя — ТОЛЬКО для ученика */}
               {role === 'student' && (
                 <input
                   type="text"
@@ -157,9 +205,18 @@ const AuthModal = ({ isOpen, onClose }) => {
                 />
               )}
 
+              {/* Подсказка для учителя */}
               {role === 'teacher' && (
-                <p style={{ fontSize: '13px', color: '#888', margin: '4px 0 8px', lineHeight: '1.5' }}>
-                  После регистрации аккаунт будет проверен администратором. Вы сразу попадёте в личный кабинет.
+                <p style={{
+                  fontSize: '13px',
+                  color: '#777',
+                  margin: '4px 0 8px',
+                  lineHeight: '1.6',
+                  background: 'rgba(0,208,132,0.07)',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                }}>
+                  После регистрации вы сразу попадёте в личный кабинет. Доступ к разделам откроется после подтверждения администратором.
                 </p>
               )}
             </>
@@ -170,7 +227,7 @@ const AuthModal = ({ isOpen, onClose }) => {
           <button
             type="submit"
             className="modal-submit"
-            disabled={isLoading || !passwordsMatch || (!isLogin && !username)}
+            disabled={isSubmitDisabled}
           >
             {isLoading ? 'Загрузка...' : isLogin ? 'Войти' : 'Создать аккаунт'}
           </button>
