@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import SetupProfileModal from '../components/SetupProfileModal/SetupProfileModal';
+import TaskBank from '../components/TaskBank/TaskBank';
 import './DashboardLayout.css';
 
 const EXAM_LABELS = { oge: 'ОГЭ', ege: 'ЕГЭ' };
@@ -49,12 +50,10 @@ const DashboardLayout = () => {
   const [activeSubject, setActiveSubject] = useState('Все');
   const [showSetup, setShowSetup] = useState(false);
 
-  // Учитель, который ещё не подтверждён
   const isPendingTeacher = user?.role === 'teacher' && !user?.is_approved;
 
   useEffect(() => {
     if (!user) return;
-    // Сбрасываем на главную, если учитель не подтверждён
     if (isPendingTeacher) {
       setActiveTab('home');
       return;
@@ -95,7 +94,6 @@ const DashboardLayout = () => {
     alert('Задание решено верно!');
   };
 
-  // Обработчик клика по вкладке: заблокированные вкладки не переключаются
   const handleTabClick = (tab) => {
     if (isPendingTeacher && tab !== 'home' && tab !== 'profile') return;
     setActiveTab(tab);
@@ -103,7 +101,6 @@ const DashboardLayout = () => {
 
   if (!user) return <div className="loading">Загрузка...</div>;
 
-  // Вкладки сайдбара
   const navItems = [
     { key: 'home', label: 'Главная' },
     { key: 'homework-list', label: 'Домашняя работа' },
@@ -116,9 +113,7 @@ const DashboardLayout = () => {
       case 'home':
         return (
           <div className="main-container">
-            {/* Баннер ожидания — только для неподтверждённого учителя */}
             {isPendingTeacher && <PendingBanner />}
-
             <h2>Добро пожаловать, {user.username || user.email}!</h2>
             <p>
               {isPendingTeacher
@@ -178,31 +173,34 @@ const DashboardLayout = () => {
       }
 
       case 'homework-status':
+        // Учитель — показываем банк заданий с навигацией
+        if (user.role === 'teacher') {
+          return <TaskBank user={user} />;
+        }
+        // Ученик — ошибки
         return (
           <div className="main-container">
             <div className="error-header">
-              <h2>{user.role === 'teacher' ? 'Банк заданий' : 'Мои ошибки'}</h2>
+              <h2>Мои ошибки</h2>
             </div>
-            {user.role === 'student' && (
-              <div className="error-list">
-                {errorTasks.length > 0 ? (
-                  errorTasks.map(task => (
-                    <div key={task.id} className="error-card">
-                      <div className="error-badge">{task.code}</div>
-                      <div className="error-info">
-                        <h4>{task.title}</h4>
-                        <span className="subject-tag">{task.subject}</span>
-                      </div>
-                      <button className="btn-solve" onClick={() => handleSolveError(task.id)}>
-                        Решить снова
-                      </button>
+            <div className="error-list">
+              {errorTasks.length > 0 ? (
+                errorTasks.map(task => (
+                  <div key={task.id} className="error-card">
+                    <div className="error-badge">{task.code}</div>
+                    <div className="error-info">
+                      <h4>{task.title}</h4>
+                      <span className="subject-tag">{task.subject}</span>
                     </div>
-                  ))
-                ) : (
-                  <div className="empty-errors">🎉 Ошибок нет!</div>
-                )}
-              </div>
-            )}
+                    <button className="btn-solve" onClick={() => handleSolveError(task.id)}>
+                      Решить снова
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-errors">🎉 Ошибок нет!</div>
+              )}
+            </div>
           </div>
         );
 
@@ -292,9 +290,7 @@ const DashboardLayout = () => {
                   title={isLocked ? 'Доступно после подтверждения аккаунта' : ''}
                 >
                   {label}
-                  {isLocked && (
-                    <span style={{ fontSize: '13px', marginLeft: '6px' }}>🔒</span>
-                  )}
+                  {isLocked && <span style={{ fontSize: '13px', marginLeft: '6px' }}>🔒</span>}
                 </li>
               );
             })}
