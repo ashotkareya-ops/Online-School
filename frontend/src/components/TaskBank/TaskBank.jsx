@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import TaskList from './TaskList';
 import './TaskBank.css';
 
 const EXAM_LABELS = { oge: 'ОГЭ', ege: 'ЕГЭ' };
@@ -9,7 +10,6 @@ const EXAM_DESCS  = {
 };
 
 // ─── Данные заданий по предметам ─────────────────────────────────────────────
-// В будущем будут приходить с бэкенда
 const TASK_DATA = {
   'Математика': [
     { id: 1, name: 'Простейшие текстовые задачи', subtypes: [
@@ -68,17 +68,24 @@ const TASK_DATA = {
   ],
 };
 
-const getTasksForSubject = (subject) =>
-  TASK_DATA[subject] || [];
+const getTasksForSubject = (subject) => TASK_DATA[subject] || [];
 
-// ─── Компонент: одна строка подтипа ──────────────────────────────────────────
-const SubtypeRow = ({ subtype, checked, count, onToggle, onCountChange }) => (
+// ─── Компонент: строка подтипа ────────────────────────────────────────────────
+const SubtypeRow = ({ subtype, checked, count, onToggle, onCountChange, onOpenList }) => (
   <div className="tb-subtype-row">
     <div
       className={`tb-subtype-check ${checked ? 'checked' : ''}`}
       onClick={onToggle}
     />
-    <span className="tb-subtype-name" onClick={onToggle}>{subtype.name}</span>
+    {/* Название — кликабельное, ведёт к списку заданий */}
+    <span
+      className="tb-subtype-name tb-subtype-name--link"
+      onClick={onOpenList}
+      title="Открыть все задания этого типа"
+    >
+      {subtype.name}
+      <span className="tb-subtype-link-icon">↗</span>
+    </span>
     <span className="tb-subtype-total">{subtype.total} шт.</span>
     <div
       className="tb-count-wrap"
@@ -91,8 +98,8 @@ const SubtypeRow = ({ subtype, checked, count, onToggle, onCountChange }) => (
   </div>
 );
 
-// ─── Компонент: группа заданий (аккордеон) ───────────────────────────────────
-const TaskGroup = ({ group, isOpen, onToggle, checked, counts, onSubtypeToggle, onCountChange }) => (
+// ─── Компонент: группа (аккордеон) ───────────────────────────────────────────
+const TaskGroup = ({ group, isOpen, onToggle, checked, counts, onSubtypeToggle, onCountChange, onOpenList }) => (
   <div className={`tb-group ${isOpen ? 'open' : ''}`}>
     <div className="tb-group-header" onClick={onToggle}>
       <div className={`tb-group-num ${isOpen ? 'open' : ''}`}>{group.id}</div>
@@ -112,6 +119,7 @@ const TaskGroup = ({ group, isOpen, onToggle, checked, counts, onSubtypeToggle, 
             count={counts[s.id] || Math.min(5, s.total)}
             onToggle={() => onSubtypeToggle(s.id, s.total)}
             onCountChange={(delta) => onCountChange(s.id, delta, s.total)}
+            onOpenList={() => onOpenList(group, s)}
           />
         ))}
       </div>
@@ -119,11 +127,11 @@ const TaskGroup = ({ group, isOpen, onToggle, checked, counts, onSubtypeToggle, 
   </div>
 );
 
-// ─── Шаг: Банк заданий (список задач) ────────────────────────────────────────
-const TaskBankStep = ({ examType, subject, onBack }) => {
-  const [openGroup, setOpenGroup]   = useState(null);
-  const [checked, setChecked]       = useState({});
-  const [counts, setCounts]         = useState({});
+// ─── Шаг банка заданий ────────────────────────────────────────────────────────
+const TaskBankStep = ({ examType, subject, onBack, onOpenList }) => {
+  const [openGroup, setOpenGroup] = useState(null);
+  const [checked, setChecked]     = useState({});
+  const [counts, setCounts]       = useState({});
 
   const tasks = getTasksForSubject(subject);
 
@@ -133,9 +141,8 @@ const TaskBankStep = ({ examType, subject, onBack }) => {
   const handleSubtypeToggle = (sid, total) => {
     setChecked(prev => {
       const next = { ...prev, [sid]: !prev[sid] };
-      if (next[sid] && !counts[sid]) {
+      if (next[sid] && !counts[sid])
         setCounts(c => ({ ...c, [sid]: Math.min(5, total) }));
-      }
       return next;
     });
   };
@@ -164,6 +171,7 @@ const TaskBankStep = ({ examType, subject, onBack }) => {
             <span className="tb-crumb">{subject}</span>
           </div>
         </div>
+        <button className="tb-add-btn">+ Добавить задание</button>
       </div>
 
       {tasks.length === 0 ? (
@@ -185,6 +193,7 @@ const TaskBankStep = ({ examType, subject, onBack }) => {
                 counts={counts}
                 onSubtypeToggle={handleSubtypeToggle}
                 onCountChange={handleCountChange}
+                onOpenList={(g, s) => onOpenList(g, s)}
               />
             ))}
           </div>
@@ -196,10 +205,7 @@ const TaskBankStep = ({ examType, subject, onBack }) => {
                 {totalTypes} {totalTypes === 1 ? 'тип' : 'типа'} · {totalTasks} заданий
               </strong>
             </span>
-            <button
-              className="tb-assign-btn"
-              disabled={totalTasks === 0}
-            >
+            <button className="tb-assign-btn" disabled={totalTasks === 0}>
               Задать ученикам →
             </button>
           </div>
@@ -236,7 +242,7 @@ const SubjectStep = ({ examType, subjects, onSelect, onBack }) => (
   <div className="tb-step">
     {onBack && <button className="tb-back-btn" onClick={onBack}>← Назад</button>}
     <h2 className="tb-title">Выберите предмет</h2>
-    <div className="tb-breadcrumb" style={{ marginBottom: 0 }}>
+    <div className="tb-breadcrumb">
       <span className="tb-crumb">{EXAM_LABELS[examType]}</span>
       <span className="tb-crumb-sep">·</span>
       <span style={{ fontSize: '12px', color: '#aaa' }}>выберите предмет</span>
@@ -252,10 +258,14 @@ const SubjectStep = ({ examType, subjects, onSelect, onBack }) => (
   </div>
 );
 
-// ─── Главный компонент ────────────────────────────────────────────────────────
+// ─── Корневой компонент с роутингом по шагам ─────────────────────────────────
 const TaskBank = ({ user }) => {
-  const [selectedExam, setSelectedExam]       = useState(null);
+  // Шаги: 'exam' | 'subject' | 'bank' | 'list'
+  const [step, setStep]                 = useState('exam');
+  const [selectedExam, setSelectedExam] = useState(null);
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const [selectedGroup, setSelectedGroup]     = useState(null);   // { id, name }
+  const [selectedSubtype, setSelectedSubtype] = useState(null);   // { id, name, total }
 
   const examTypes   = user?.exam_type || [];
   const allSubjects = user?.subjects  || [];
@@ -264,6 +274,7 @@ const TaskBank = ({ user }) => {
   useEffect(() => {
     if (skipExamStep && examTypes.length === 1) {
       setSelectedExam(examTypes[0]);
+      setStep('subject');
     }
   }, []);
 
@@ -275,25 +286,63 @@ const TaskBank = ({ user }) => {
     return allSubjects;
   };
 
-  const handleBack = () => {
-    if (selectedSubject) { setSelectedSubject(null); return; }
-    if (!skipExamStep)   { setSelectedExam(null); }
+  const handleSelectExam = (exam) => {
+    setSelectedExam(exam);
+    setStep('subject');
   };
 
-  if (selectedSubject) {
-    return <TaskBankStep examType={selectedExam} subject={selectedSubject} onBack={handleBack} />;
+  const handleSelectSubject = (subject) => {
+    setSelectedSubject(subject);
+    setStep('bank');
+  };
+
+  const handleOpenList = (group, subtype) => {
+    setSelectedGroup(group);
+    setSelectedSubtype(subtype);
+    setStep('list');
+  };
+
+  const handleBack = () => {
+    if (step === 'list')    { setStep('bank'); return; }
+    if (step === 'bank')    { setStep('subject'); return; }
+    if (step === 'subject' && !skipExamStep) { setStep('exam'); return; }
+  };
+
+  if (step === 'list') {
+    return (
+      <TaskList
+        examType={selectedExam}
+        subject={selectedSubject}
+        groupName={selectedGroup?.name}
+        subtypeName={selectedSubtype?.name}
+        onBack={handleBack}
+      />
+    );
   }
-  if (selectedExam) {
+
+  if (step === 'bank') {
+    return (
+      <TaskBankStep
+        examType={selectedExam}
+        subject={selectedSubject}
+        onBack={handleBack}
+        onOpenList={handleOpenList}
+      />
+    );
+  }
+
+  if (step === 'subject') {
     return (
       <SubjectStep
         examType={selectedExam}
         subjects={getSubjectsForExam(selectedExam)}
-        onSelect={setSelectedSubject}
+        onSelect={handleSelectSubject}
         onBack={skipExamStep ? undefined : handleBack}
       />
     );
   }
-  return <ExamStep examTypes={examTypes} onSelect={setSelectedExam} />;
+
+  return <ExamStep examTypes={examTypes} onSelect={handleSelectExam} />;
 };
 
 export default TaskBank;

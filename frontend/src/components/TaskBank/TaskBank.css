@@ -114,7 +114,6 @@
 }
 .tb-group-header:hover { background: rgba(0, 208, 132, 0.04); }
 
-/* Номер задания */
 .tb-group-num {
   width: 36px;
   height: 36px;
@@ -129,10 +128,7 @@
   flex-shrink: 0;
   transition: background 0.2s, color 0.2s;
 }
-.tb-group-num.open {
-  background: #00d084;
-  color: white;
-}
+.tb-group-num.open { background: #00d084; color: white; }
 
 .tb-group-name {
   flex: 1;
@@ -159,9 +155,7 @@
 .tb-chevron.open { transform: rotate(180deg); }
 
 /* ── Подтипы ────────────────────────────────── */
-.tb-subtypes {
-  border-top: 1px solid #f0f0f0;
-}
+.tb-subtypes { border-top: 1px solid #f0f0f0; }
 
 .tb-subtype-row {
   display: flex;
@@ -187,7 +181,6 @@
   flex-shrink: 0;
   transition: all 0.15s;
   background: white;
-  position: relative;
 }
 .tb-subtype-check.checked {
   background: #00d084;
@@ -201,13 +194,30 @@
   line-height: 1;
 }
 
+/* Название подтипа — обычное и кликабельное */
 .tb-subtype-name {
   flex: 1;
   font-size: 14px;
   font-weight: 600;
   color: #333;
-  cursor: pointer;
 }
+
+.tb-subtype-name--link {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.15s;
+}
+.tb-subtype-name--link:hover { color: #00a86b; }
+
+.tb-subtype-link-icon {
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  color: #00a86b;
+}
+.tb-subtype-name--link:hover .tb-subtype-link-icon { opacity: 1; }
 
 .tb-subtype-total {
   font-size: 12px;
@@ -217,7 +227,7 @@
   text-align: right;
 }
 
-/* Счётчик +/- */
+/* Счётчик */
 .tb-count-wrap {
   display: flex;
   align-items: center;
@@ -244,10 +254,7 @@
   padding: 0;
   line-height: 1;
 }
-.tb-count-btn:hover {
-  border-color: #00d084;
-  color: #00a86b;
-}
+.tb-count-btn:hover { border-color: #00d084; color: #00a86b; }
 
 .tb-count-val {
   font-size: 14px;
@@ -258,7 +265,7 @@
   font-family: 'Nunito', sans-serif;
 }
 
-/* ── Футер с итогами ────────────────────────── */
+/* ── Футер ──────────────────────────────────── */
 .tb-footer {
   display: flex;
   align-items: center;
@@ -286,14 +293,8 @@
   cursor: pointer;
   transition: background 0.2s, opacity 0.2s, transform 0.15s;
 }
-.tb-assign-btn:not(:disabled):hover {
-  background: #00b872;
-  transform: translateY(-1px);
-}
-.tb-assign-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
+.tb-assign-btn:not(:disabled):hover { background: #00b872; transform: translateY(-1px); }
+.tb-assign-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ── Пустое состояние ───────────────────────── */
 .tb-empty {
@@ -313,11 +314,7 @@
 .tb-empty__hint { font-size: 13px; color: #aaa; font-family: 'Nunito', sans-serif; margin: 0; }
 
 /* ── Шаги выбора экзамена / предмета ───────── */
-.tb-options {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+.tb-options { display: flex; flex-direction: column; gap: 12px; }
 
 .tb-option-btn {
   display: flex;
@@ -352,11 +349,7 @@
 .tb-option-btn__arrow { font-size: 22px; font-weight: 800; color: #00d084; transition: transform 0.2s; flex-shrink: 0; }
 .tb-option-btn:hover .tb-option-btn__arrow { transform: translateX(5px); }
 
-.tb-subjects-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
+.tb-subjects-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 .tb-subject-btn {
   display: flex;
@@ -374,12 +367,7 @@
   text-align: left;
   transition: border-color 0.2s, color 0.2s, background 0.2s, transform 0.15s;
 }
-.tb-subject-btn:hover {
-  border-color: #00d084;
-  color: #00a86b;
-  background: rgba(0,208,132,0.05);
-  transform: translateY(-1px);
-}
+.tb-subject-btn:hover { border-color: #00d084; color: #00a86b; background: rgba(0,208,132,0.05); transform: translateY(-1px); }
 .tb-subject-btn__arrow { font-size: 16px; color: #00d084; font-weight: 800; transition: transform 0.2s; }
 .tb-subject-btn:hover .tb-subject-btn__arrow { transform: translateX(3px); }
 
