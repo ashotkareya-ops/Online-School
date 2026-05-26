@@ -5,140 +5,56 @@
   flex-direction: column;
   gap: 14px;
   font-family: 'Nunito', sans-serif;
+  padding-bottom: 90px; /* место под плавающую корзину */
 }
 
 /* ── Кнопка назад ───────────────────────────── */
 .tl-back-btn {
-  background: none;
-  border: none;
-  color: #aaa;
-  font-size: 13px;
-  font-weight: 700;
-  font-family: 'Nunito', sans-serif;
-  cursor: pointer;
-  padding: 0;
-  align-self: flex-start;
-  transition: color 0.2s;
+  background: none; border: none; color: #aaa;
+  font-size: 13px; font-weight: 700; font-family: 'Nunito', sans-serif;
+  cursor: pointer; padding: 0; align-self: flex-start; transition: color 0.2s;
 }
 .tl-back-btn:hover { color: #555; }
 
 /* ── Шапка ──────────────────────────────────── */
-.tl-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.tl-header__actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.tl-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: #222;
-  margin: 0 0 6px;
-}
+.tl-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.tl-header__actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.tl-title { font-size: 22px; font-weight: 800; color: #222; margin: 0 0 6px; }
 
 /* ── Хлебные крошки ─────────────────────────── */
-.tl-crumbs {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-wrap: wrap;
-}
-.tl-crumb {
-  font-size: 12px;
-  font-weight: 700;
-  color: #00a86b;
-  background: rgba(0, 208, 132, 0.12);
-  padding: 3px 9px;
-  border-radius: 20px;
-}
-.tl-crumb--active {
-  color: #444;
-  background: #f0f0f0;
-}
+.tl-crumbs { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.tl-crumb { font-size: 12px; font-weight: 700; color: #00a86b; background: rgba(0,208,132,0.12); padding: 3px 9px; border-radius: 20px; }
+.tl-crumb--active { color: #444; background: #f0f0f0; }
 .tl-crumb-sep { font-size: 12px; color: #ccc; }
 
-/* ── Кнопка добавить ────────────────────────── */
+/* ── Кнопка добавить задание ────────────────── */
 .tl-add-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 16px;
-  border-radius: 11px;
-  border: none;
-  background: #00d084;
-  color: white;
-  font-family: 'Nunito', sans-serif;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s, transform 0.15s;
+  display: flex; align-items: center; gap: 6px; padding: 9px 16px;
+  border-radius: 11px; border: none; background: #00d084; color: white;
+  font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800;
+  cursor: pointer; white-space: nowrap; transition: background 0.2s, transform 0.15s;
 }
 .tl-add-btn:hover { background: #00b872; transform: translateY(-1px); }
-.tl-add-btn:active { transform: scale(0.98); }
 
 /* ── Дропдаун сортировки ────────────────────── */
 .tl-sort { position: relative; flex-shrink: 0; }
-
 .tl-sort__btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 14px;
-  border-radius: 11px;
-  border: 1.5px solid #e0e0e0;
-  background: white;
-  font-family: 'Nunito', sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  color: #444;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: border-color 0.2s;
+  display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+  border-radius: 11px; border: 1.5px solid #e0e0e0; background: white;
+  font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700;
+  color: #444; cursor: pointer; white-space: nowrap; transition: border-color 0.2s;
 }
-.tl-sort__btn:hover,
-.tl-sort__btn.open { border-color: #00d084; color: #00a86b; }
-
-.tl-sort__arrow {
-  font-size: 10px;
-  color: #aaa;
-  transition: transform 0.2s;
-}
+.tl-sort__btn:hover, .tl-sort__btn.open { border-color: #00d084; color: #00a86b; }
+.tl-sort__arrow { font-size: 10px; color: #aaa; transition: transform 0.2s; }
 .tl-sort__btn.open .tl-sort__arrow { transform: rotate(180deg); }
-
 .tl-sort__drop {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 6px);
-  background: white;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 6px;
-  min-width: 190px;
-  z-index: 100;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  position: absolute; right: 0; top: calc(100% + 6px);
+  background: white; border: 1.5px solid #e5e7eb; border-radius: 14px;
+  padding: 6px; min-width: 190px; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,0.08);
 }
-.tl-sort__item {
-  padding: 9px 12px;
-  border-radius: 9px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #444;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  white-space: nowrap;
-}
-.tl-sort__item:hover  { background: rgba(0, 208, 132, 0.08); color: #00a86b; }
-.tl-sort__item.active { background: rgba(0, 208, 132, 0.14); color: #00a86b; }
+.tl-sort__item { padding: 9px 12px; border-radius: 9px; font-size: 13px; font-weight: 700; color: #444; cursor: pointer; transition: background 0.15s, color 0.15s; white-space: nowrap; }
+.tl-sort__item:hover  { background: rgba(0,208,132,0.08); color: #00a86b; }
+.tl-sort__item.active { background: rgba(0,208,132,0.14); color: #00a86b; }
 
 /* ── Статистика ─────────────────────────────── */
 .tl-stats { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -146,52 +62,33 @@
 .tl-stat--easy   { background: #e6faf2; color: #008a55; }
 .tl-stat--medium { background: #fff8e1; color: #b07d00; }
 .tl-stat--hard   { background: #ffeaea; color: #c0392b; }
+.tl-stat--cart   { background: rgba(0,208,132,0.15); color: #00a86b; }
 
-/* ── Список карточек ────────────────────────── */
+/* ── Список ─────────────────────────────────── */
 .tl-list { display: flex; flex-direction: column; gap: 8px; }
 
 /* ── Карточка задания ───────────────────────── */
 .tl-card {
-  background: white;
-  border: 1.5px solid #ebebeb;
-  border-radius: 16px;
-  overflow: hidden;
+  background: white; border: 1.5px solid #ebebeb;
+  border-radius: 16px; overflow: hidden;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-.tl-card.expanded {
-  border-color: rgba(0, 208, 132, 0.5);
-  box-shadow: 0 4px 16px rgba(0, 208, 132, 0.08);
-}
+.tl-card.expanded { border-color: rgba(0,208,132,0.5); box-shadow: 0 4px 16px rgba(0,208,132,0.08); }
+.tl-card.in-cart  { border-color: rgba(0,208,132,0.6); background: rgba(0,208,132,0.02); }
 
-.tl-card__main {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px 16px;
-}
+.tl-card__main { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; }
 
 .tl-card__idx {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: rgba(0, 208, 132, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 800;
-  color: #00a86b;
-  flex-shrink: 0;
+  width: 32px; height: 32px; border-radius: 9px;
+  background: rgba(0,208,132,0.1); display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; color: #00a86b; flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
 }
+.tl-card__idx.in-cart { background: #00d084; color: white; }
 
 .tl-card__body { flex: 1; min-width: 0; }
-.tl-card__text {
-  font-size: 14px;
-  font-weight: 600;
-  color: #222;
-  line-height: 1.55;
-  margin: 0 0 8px;
-}
+.tl-card__text { font-size: 14px; font-weight: 600; color: #222; line-height: 1.55; margin: 0 0 8px; }
+.tl-card__task-img { max-width: 100%; max-height: 160px; object-fit: contain; border-radius: 8px; border: 1px solid rgba(0,0,0,0.07); margin-bottom: 8px; display: block; }
 .tl-card__meta { display: flex; gap: 6px; flex-wrap: wrap; }
 
 .tl-tag { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
@@ -200,293 +97,201 @@
 .tl-tag--hard    { background: #ffeaea; color: #c0392b; }
 .tl-tag--neutral { background: #f5f5f5; color: #888; }
 
+/* Действия на карточке */
+.tl-card-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; flex-shrink: 0; }
+
+/* Кнопка + в корзину */
+.tl-add-hw-btn {
+  width: 34px; height: 34px; border-radius: 10px;
+  border: 1.5px solid #e0e0e0; background: white;
+  font-size: 18px; font-weight: 800; color: #bbb;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.18s; flex-shrink: 0;
+}
+.tl-add-hw-btn:hover { border-color: #00d084; color: #00a86b; background: rgba(0,208,132,0.06); }
+.tl-add-hw-btn.added { background: #00d084; border-color: #00d084; color: white; font-size: 14px; }
+
 /* Кнопка «Решение» */
 .tl-card__btn {
-  padding: 7px 14px;
-  border-radius: 10px;
-  border: 1.5px solid #e0e0e0;
-  background: white;
-  font-family: 'Nunito', sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  color: #555;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  align-self: center;
+  padding: 7px 14px; border-radius: 10px; border: 1.5px solid #e0e0e0;
+  background: white; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 700; color: #555;
+  cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 5px;
   transition: border-color 0.2s, color 0.2s, background 0.2s;
 }
-.tl-card__btn:hover { border-color: #00d084; color: #00a86b; background: rgba(0,208,132,0.05); }
+.tl-card__btn:hover  { border-color: #00d084; color: #00a86b; background: rgba(0,208,132,0.05); }
 .tl-card__btn.active { border-color: #00d084; color: #00a86b; background: rgba(0,208,132,0.07); }
-
-.tl-card__btn-arrow {
-  font-size: 10px;
-  transition: transform 0.25s;
-  display: inline-block;
-}
+.tl-card__btn-arrow { font-size: 10px; transition: transform 0.25s; display: inline-block; }
 .tl-card__btn.active .tl-card__btn-arrow { transform: rotate(180deg); }
 
-/* ── Панель решения (плавное раскрытие) ─────── */
+/* 1. Сам контейнер решения */
 .tl-solution {
   border-top: 1px solid #f0f0f0;
   max-height: 0;
   overflow: hidden;
   opacity: 0;
-  transition: max-height 0.38s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.3s ease;
+  /* Плавное раскрытие */
+  transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
 }
+
+/* 2. Состояние, когда решение открыто */
 .tl-solution.open {
-  max-height: 500px;
+  /* Задаем заведомо большое значение (например, 4000px), 
+     чтобы карточка гарантированно растягивалась до самого конца */
+  max-height: 4000px; 
   opacity: 1;
 }
 
-.tl-solution__inner {
-  padding: 16px 16px 16px 60px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
+/* 3. Внутренний блок с контентом шагов */
+.tl-solution__inner { padding: 16px 16px 16px 60px; display: flex; flex-direction: column; gap: 14px; max-height: none !important; overflow: visible !important;}
 .tl-solution__section { display: flex; flex-direction: column; gap: 10px; }
-
-.tl-solution__label {
-  font-size: 11px;
-  font-weight: 800;
-  color: #aaa;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
+.tl-solution__label { font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 0.08em; }
 .tl-solution__steps { display: flex; flex-direction: column; gap: 7px; }
-
-.tl-solution__step {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
+.tl-solution__step { display: flex; align-items: flex-start; gap: 10px; }
 .tl-solution__step-num {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: rgba(0, 208, 132, 0.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 800;
-  color: #00a86b;
-  flex-shrink: 0;
-  margin-top: 2px;
+  width: 22px; height: 22px; border-radius: 6px;
+  background: rgba(0,208,132,0.12); display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; color: #00a86b; flex-shrink: 0; margin-top: 2px;
 }
+.tl-solution__step-text { font-size: 13px; font-weight: 600; color: #333; line-height: 1.55; margin: 0; }
+.tl-solution__step-img { max-width: 100%; max-height: 220px; object-fit: contain; border-radius: 10px; border: 1px solid rgba(0,0,0,0.07); background: #fafafa; margin-top: 4px; }
 
-.tl-solution__step-text {
-  font-size: 13px;
-  font-weight: 600;
-  color: #333;
-  line-height: 1.55;
-  margin: 0;
-}
-
-/* Блок ответа */
-.tl-answer {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(0, 208, 132, 0.07);
-  border: 1.5px solid rgba(0, 208, 132, 0.3);
-  border-radius: 12px;
-  padding: 10px 14px;
-}
-.tl-answer__label {
-  font-size: 12px;
-  font-weight: 800;
-  color: #008a55;
-}
-.tl-answer__val {
-  font-size: 15px;
-  font-weight: 800;
-  color: #005c38;
-}
+.tl-answer { display: flex; align-items: center; gap: 10px; background: rgba(0,208,132,0.07); border: 1.5px solid rgba(0,208,132,0.3); border-radius: 12px; padding: 10px 14px; }
+.tl-answer__label { font-size: 12px; font-weight: 800; color: #008a55; }
+.tl-answer__val   { font-size: 15px; font-weight: 800; color: #005c38; }
 
 /* ── Пустое состояние ───────────────────────── */
 .tl-empty {
-  text-align: center;
-  padding: 50px 20px;
-  background: white;
-  border-radius: 16px;
-  border: 2px dashed rgba(0, 208, 132, 0.25);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  text-align: center; padding: 50px 20px; background: white; border-radius: 16px;
+  border: 2px dashed rgba(0,208,132,0.25); display: flex; flex-direction: column; align-items: center; gap: 8px;
 }
-.tl-empty__icon  { font-size: 40px; }
-.tl-empty__text  { font-size: 15px; font-weight: 700; color: #333; margin: 0; }
-.tl-empty__hint  { font-size: 13px; color: #aaa; margin: 0; }
+.tl-empty__icon { font-size: 40px; }
+.tl-empty__text { font-size: 15px; font-weight: 700; color: #333; margin: 0; }
+.tl-empty__hint { font-size: 13px; color: #aaa; margin: 0; }
+
+/* ── Зона загрузки картинки ─────────────────── */
+.tl-img-zone {
+  border: 2px dashed #e0e0e0; border-radius: 12px; padding: 14px 16px;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  cursor: pointer; transition: border-color 0.2s, background 0.2s;
+  background: #fafafa; margin-top: 8px; text-align: center;
+}
+.tl-img-zone:hover { border-color: #00d084; background: rgba(0,208,132,0.04); }
+.tl-img-zone__icon { font-size: 22px; }
+.tl-img-zone__text { font-size: 12px; font-weight: 700; color: #888; }
+.tl-img-zone__hint { font-size: 11px; color: #bbb; }
+
+.tl-img-preview { margin-top: 8px; border-radius: 12px; border: 1.5px solid rgba(0,208,132,0.35); overflow: hidden; }
+.tl-img-preview img { width: 100%; max-height: 140px; object-fit: contain; display: block; background: #f9f9f9; }
+.tl-img-preview__footer { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8f8f8; }
+.tl-img-preview__name { font-size: 11px; color: #888; font-weight: 600; }
+.tl-img-preview__remove { background: none; border: none; font-size: 11px; font-weight: 700; color: #e53935; cursor: pointer; font-family: 'Nunito', sans-serif; }
+.tl-img-preview__remove:hover { text-decoration: underline; }
+
+/* ── Поле года ──────────────────────────────── */
+.tl-year-wrap { display: flex; gap: 8px; align-items: center; }
+.tl-year-input {
+  flex: 1; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700;
+  padding: 9px 12px; border-radius: 10px; border: 1.5px solid #e0e0e0;
+  background: white; color: #222; outline: none; transition: border-color 0.2s;
+}
+.tl-year-input:focus { border-color: #00d084; }
+.tl-year-input[readonly] { background: #fafafa; color: #888; }
+
+.tl-year-auto {
+  padding: 7px 11px; border-radius: 9px; border: 1.5px solid #e0e0e0;
+  background: white; font-family: 'Nunito', sans-serif;
+  font-size: 12px; font-weight: 700; color: #aaa; cursor: pointer; white-space: nowrap;
+  transition: all 0.15s;
+}
+.tl-year-auto:hover { border-color: #00d084; color: #00a86b; }
+.tl-year-auto.active { background: rgba(0,208,132,0.12); border-color: #00d084; color: #00a86b; }
+
+/* ── Плавающая корзина ──────────────────────── */
+.tl-cart-widget {
+  position: fixed; bottom: 28px; right: 36px;
+  background: white; border: 2px solid #00d084; border-radius: 16px;
+  padding: 14px 20px; box-shadow: 0 10px 30px rgba(0,208,132,0.2);
+  display: flex; align-items: center; gap: 16px; z-index: 500;
+  animation: cartIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes cartIn {
+  from { transform: translateY(60px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.tl-cart-icon  { font-size: 24px; flex-shrink: 0; }
+.tl-cart-info  { display: flex; flex-direction: column; gap: 1px; }
+.tl-cart-label { font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 0.06em; }
+.tl-cart-count { font-size: 16px; font-weight: 800; color: #222; }
+.tl-cart-btn {
+  padding: 9px 18px; border-radius: 11px; border: none; background: #00d084;
+  color: white; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800;
+  cursor: pointer; white-space: nowrap; transition: background 0.2s, transform 0.15s;
+}
+.tl-cart-btn:hover { background: #00b872; transform: translateY(-1px); }
+
+/* ── Список заданий в модалке «Задать ДЗ» ───── */
+.tl-assign-list { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
+.tl-assign-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: #f9f9f9; border-radius: 12px; padding: 10px 12px;
+  border: 1px solid #f0f0f0;
+}
+.tl-assign-num {
+  width: 24px; height: 24px; border-radius: 7px; flex-shrink: 0;
+  background: rgba(0,208,132,0.12); display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; color: #00a86b;
+}
+.tl-assign-text { flex: 1; font-size: 13px; font-weight: 600; color: #333; line-height: 1.45; margin: 0 8px 0 0; }
 
 /* ── Модалка ────────────────────────────────── */
 .tl-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-  backdrop-filter: blur(4px);
+  position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 20px; backdrop-filter: blur(4px);
 }
-
 .tl-modal {
-  background: white;
-  border-radius: 20px;
-  padding: 28px;
-  width: 100%;
-  max-width: 460px;
-  max-height: 90vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-  animation: modalIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: white; border-radius: 20px; padding: 28px; width: 100%;
+  max-width: 460px; max-height: 90vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  animation: modalIn 0.22s cubic-bezier(0.34,1.56,0.64,1);
 }
-
 @keyframes modalIn {
   from { opacity: 0; transform: scale(0.94) translateY(10px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
-
-.tl-modal__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.tl-modal__title {
-  font-size: 18px;
-  font-weight: 800;
-  color: #222;
-  margin: 0;
-}
-.tl-modal__close {
-  background: none;
-  border: none;
-  font-size: 18px;
-  color: #aaa;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  transition: color 0.15s;
-}
+.tl-modal__header { display: flex; align-items: center; justify-content: space-between; }
+.tl-modal__title  { font-size: 18px; font-weight: 800; color: #222; margin: 0; }
+.tl-modal__close  { background: none; border: none; font-size: 18px; color: #aaa; cursor: pointer; padding: 0; line-height: 1; transition: color 0.15s; }
 .tl-modal__close:hover { color: #555; }
-
-.tl-modal__crumb {
-  font-size: 12px;
-  color: #888;
-  background: #f5f5f5;
-  padding: 5px 12px;
-  border-radius: 20px;
-  align-self: flex-start;
-}
+.tl-modal__crumb  { font-size: 12px; color: #888; background: #f5f5f5; padding: 5px 12px; border-radius: 20px; align-self: flex-start; }
 .tl-modal__crumb strong { color: #00a86b; }
-
 .tl-modal__fields { display: flex; flex-direction: column; gap: 14px; }
-
-.tl-modal__field { display: flex; flex-direction: column; gap: 5px; }
-
-.tl-modal__label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #666;
-}
-
+.tl-modal__field  { display: flex; flex-direction: column; gap: 5px; }
+.tl-modal__label  { font-size: 12px; font-weight: 700; color: #666; }
+.tl-modal__hint   { font-size: 11px; color: #aaa; }
 .tl-modal__textarea {
-  font-family: 'Nunito', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1.5px solid #e0e0e0;
-  background: white;
-  color: #222;
-  resize: vertical;
-  outline: none;
-  line-height: 1.55;
-  transition: border-color 0.2s;
+  font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 600;
+  padding: 10px 12px; border-radius: 10px; border: 1.5px solid #e0e0e0;
+  background: white; color: #222; resize: vertical; outline: none;
+  line-height: 1.55; transition: border-color 0.2s; width: 100%;
 }
 .tl-modal__textarea:focus { border-color: #00d084; }
-.tl-modal__textarea--sm { resize: none; }
-
-.tl-modal__hint {
-  font-size: 11px;
-  color: #aaa;
-}
-
-.tl-modal__row {
-  display: flex;
-  gap: 12px;
-}
+.tl-modal__textarea--sm   { resize: none; }
+.tl-modal__row   { display: flex; gap: 12px; }
 .tl-modal__row > * { flex: 1; }
-
 .tl-modal__select {
-  font-family: 'Nunito', sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 9px 12px;
-  border-radius: 10px;
-  border: 1.5px solid #e0e0e0;
-  background: white;
-  color: #222;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.2s;
+  font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700;
+  padding: 9px 12px; border-radius: 10px; border: 1.5px solid #e0e0e0;
+  background: white; color: #222; outline: none; cursor: pointer;
+  transition: border-color 0.2s; width: 100%;
 }
 .tl-modal__select:focus { border-color: #00d084; }
-
-.tl-modal__error {
-  font-size: 13px;
-  color: #e53935;
-  font-weight: 600;
-  margin: 0;
-}
-
-.tl-modal__footer {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  padding-top: 4px;
-}
-
-.tl-modal__cancel {
-  padding: 10px 20px;
-  border-radius: 11px;
-  border: 1.5px solid #e0e0e0;
-  background: none;
-  font-family: 'Nunito', sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  color: #666;
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
+.tl-modal__error  { font-size: 13px; color: #e53935; font-weight: 600; margin: 0; }
+.tl-modal__footer { display: flex; gap: 10px; justify-content: flex-end; padding-top: 4px; }
+.tl-modal__cancel { padding: 10px 20px; border-radius: 11px; border: 1.5px solid #e0e0e0; background: none; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700; color: #666; cursor: pointer; transition: border-color 0.15s; }
 .tl-modal__cancel:hover { border-color: #aaa; }
-
-.tl-modal__save {
-  padding: 10px 22px;
-  border-radius: 11px;
-  border: none;
-  background: #00d084;
-  color: white;
-  font-family: 'Nunito', sans-serif;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: background 0.2s, opacity 0.2s;
-}
+.tl-modal__save   { padding: 10px 22px; border-radius: 11px; border: none; background: #00d084; color: white; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; transition: background 0.2s, opacity 0.2s; }
 .tl-modal__save:hover:not(:disabled) { background: #00b872; }
 .tl-modal__save:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -498,4 +303,148 @@
   .tl-solution__inner { padding-left: 16px; }
   .tl-modal { padding: 20px; }
   .tl-modal__row { flex-direction: column; }
+  .tl-cart-widget { bottom: 16px; right: 16px; left: 16px; justify-content: space-between; }
+}
+
+
+
+
+/* Дополнительные стили для пошагового решения и картинок */
+
+.tl-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.tl-step-item {
+  background: #f9f9f9;
+  border-left: 4px solid #00d084;
+  padding: 12px 16px;
+  border-radius: 0 12px 12px 0;
+}
+
+.tl-step-badge {
+  display: inline-block;
+  background: #e6faf2;
+  color: #008a55;
+  font-weight: 800;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.tl-step-text {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+}
+
+.tl-step-image-box {
+  max-width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #eee;
+  display: inline-block;
+}
+
+.tl-step-img {
+  max-height: 250px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Стили формы внутри модалки */
+.tl-modal-steps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 5px;
+  margin-bottom: 10px;
+}
+
+.tl-modal-step-card {
+  background: #f5f5f7;
+  border: 1px solid #e8e8ed;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tl-modal-step-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #555;
+}
+
+.tl-modal-step-card__delete {
+  background: none;
+  border: none;
+  color: #e53935;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tl-modal__add-step-btn {
+  background: none;
+  border: 2px dashed #00d084;
+  color: #00d084;
+  padding: 10px;
+  border-radius: 11px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  transition: all 0.2s;
+  width: 100%;
+  text-align: center;
+}
+
+.tl-modal__add-step-btn:hover {
+  background: #e6faf2;
+}
+
+.tl-modal-step-img-ui {
+  font-size: 12px;
+}
+
+.tl-modal-step-preview {
+  position: relative;
+  display: inline-block;
+  margin-top: 5px;
+}
+
+.tl-modal-step-preview img {
+  max-height: 80px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.tl-modal-step-preview button {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #e53935;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

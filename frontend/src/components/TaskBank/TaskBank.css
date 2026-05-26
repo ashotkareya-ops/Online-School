@@ -380,3 +380,62 @@
   .tb-footer { flex-direction: column; align-items: flex-start; }
   .tb-assign-btn { width: 100%; text-align: center; }
 }
+
+
+/* ── Плавающий виджет корзины ───────────────── */
+.tb-cart-widget {
+  position: fixed;
+  bottom: 30px;
+  right: 40px;
+  background: white;
+  border: 2px solid #00d084;
+  border-radius: 16px;
+  padding: 16px 24px;
+  box-shadow: 0 10px 30px rgba(0, 208, 132, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  z-index: 1000;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.tb-cart-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.tb-cart-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.tb-cart-count {
+  font-size: 18px;
+  font-weight: 800;
+  color: #222;
+}
+
+.tb-cart-submit {
+  background: #00d084;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.tb-cart-submit:hover {
+  background: #00b872;
+  transform: translateY(-2px);
+}
+
