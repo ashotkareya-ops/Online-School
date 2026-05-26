@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './TaskList.css';
 
-// ─── Константы ────────────────────────────────────────────────────────────────
+// ─── Константы UI (Остаются во фронтенде) ─────────────────────────────────────
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024; // 2 МБ
 
 const SORT_OPTIONS = [
@@ -13,66 +13,8 @@ const SORT_OPTIONS = [
   { id: 'old',      label: 'Сначала старые' },
 ];
 
-const DIFF_LABEL = { 1: 'Лёгкое', 2: 'Среднее', 3: 'Сложное' };
+const DIFF_LABEL  = { 1: 'Лёгкое', 2: 'Среднее', 3: 'Сложное' };
 const DIFF_CLASS  = { 1: 'tl-tag--easy', 2: 'tl-tag--medium', 3: 'tl-tag--hard' };
-
-const MOCK_TASKS = [
-  {
-    id: 1, text: 'Автомобиль проехал из города А в город Б за 3 часа со скоростью 80 км/ч. Найдите расстояние.',
-    taskImage: null,
-    diff: 1, pop: 412, year: 2022,
-    steps: [
-      { text: 'Используем формулу: расстояние = скорость × время', image: null },
-      { text: 'S = 80 км/ч × 3 ч = 240 км', image: null }
-    ],
-    answer: '240 км',
-  },
-  {
-    id: 2, text: 'Поезд отправился в 14:30 и прибыл в 19:15. Найдите время в пути в минутах.',
-    taskImage: null,
-    diff: 1, pop: 389, year: 2023,
-    steps: [
-      { text: 'Считаем часы: 19 − 14 = 5 часов', image: null },
-      { text: 'Учитываем минуты: 15 − 30 = −15, значит 4 ч 45 мин', image: null },
-      { text: 'Переводим: 4 × 60 + 45 = 285 минут', image: null }
-    ],
-    answer: '285 минут',
-  },
-  {
-    id: 3, text: 'Два велосипедиста выехали навстречу. Расстояние 60 км, скорости 15 и 20 км/ч. Через сколько минут встретятся?',
-    taskImage: null,
-    diff: 2, pop: 198, year: 2023,
-    steps: [
-      { text: 'Скорость сближения: 15 + 20 = 35 км/ч', image: null },
-      { text: 'Время: 60 ÷ 35 ≈ 1,714 ч', image: null },
-      { text: 'В минутах: ≈ 103 мин', image: null }
-    ],
-    answer: '≈ 103 минуты',
-  },
-];
-
-// ─── Утилиты ──────────────────────────────────────────────────────────────────
-
-// Конвертируем файл в base64 строку
-const fileToBase64 = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload  = () => resolve(reader.result); // data:image/...;base64,...
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-
-const getSorted = (tasks, sort) => {
-  const t = [...tasks];
-  switch (sort) {
-    case 'easy':    return t.sort((a, b) => a.diff - b.diff);
-    case 'hard':    return t.sort((a, b) => b.diff - a.diff);
-    case 'popular': return t.sort((a, b) => b.pop - a.pop);
-    case 'new':     return t.sort((a, b) => b.year - a.year);
-    case 'old':     return t.sort((a, b) => a.year - b.year);
-    default:        return t;
-  }
-};
 
 // ─── Дропдаун сортировки ──────────────────────────────────────────────────────
 const SortDropdown = ({ sort, onChange }) => {
@@ -105,20 +47,18 @@ const SortDropdown = ({ sort, onChange }) => {
   );
 };
 
-// ─── Зона загрузки картинки ───────────────────────────────────────────────────
+// ─── Зона загрузки картинки (Возвращает объект File + Preview URL) ────────────
 const ImageUploadZone = ({ label, value, onChange, onError }) => {
   const inputRef = useRef(null);
 
-  const handleFile = async (file) => {
+  const handleFile = (file) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) { onError('Файл должен быть изображением'); return; }
     if (file.size > MAX_IMAGE_BYTES) { onError('Файл слишком большой (макс. 2 МБ)'); return; }
-    try {
-      const base64 = await fileToBase64(file);
-      onChange(base64);
-    } catch {
-      onError('Не удалось загрузить изображение');
-    }
+    
+    // Создаем ссылку для предпросмотра, а сам файл сохраняем для отправки на бэкенд
+    const previewUrl = URL.createObjectURL(file);
+    onChange({ file, previewUrl });
   };
 
   const handleDrop = useCallback((e) => {
@@ -129,10 +69,10 @@ const ImageUploadZone = ({ label, value, onChange, onError }) => {
 
   const handleDragOver = (e) => e.preventDefault();
 
-  if (value) {
+  if (value && value.previewUrl) {
     return (
       <div className="tl-img-preview">
-        <img src={value} alt="Прикреплённое изображение" />
+        <img src={value.previewUrl} alt="Прикреплённое изображение" />
         <div className="tl-img-preview__footer">
           <span className="tl-img-preview__name">📎 Изображение прикреплено</span>
           <button type="button" className="tl-img-preview__remove" onClick={() => onChange(null)}>
@@ -206,7 +146,7 @@ const SolutionPanel = ({ task, open }) => (
       <div className="tl-solution__section">
         <span className="tl-solution__label">Решение</span>
         <div className="tl-solution__steps">
-          {task.steps.map((step, i) => (
+          {task.steps?.map((step, i) => (
             <div key={i} className="tl-solution__step">
               <div className="tl-solution__step-num">{i + 1}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
@@ -238,13 +178,12 @@ const TaskCard = ({ task, index, cart, onCartToggle }) => {
         <div className={`tl-card__idx ${inCart ? 'in-cart' : ''}`}>{index + 1}</div>
         <div className="tl-card__body">
           {task.text && <p className="tl-card__text">{task.text}</p>}
-          {/* Отрисовка картинки к условию, если она есть */}
           {task.taskImage && (
              <img src={task.taskImage} alt="К условию" className="tl-card__task-img" />
           )}
           <div className="tl-card__meta">
-            <span className={`tl-tag ${DIFF_CLASS[task.diff]}`}>{DIFF_LABEL[task.diff]}</span>
-            <span className="tl-tag tl-tag--neutral">♥ {task.pop}</span>
+            <span className={`tl-tag ${DIFF_CLASS[task.diff] || DIFF_CLASS[1]}`}>{DIFF_LABEL[task.diff]}</span>
+            <span className="tl-tag tl-tag--neutral">♥ {task.pop || 0}</span>
             <span className="tl-tag tl-tag--neutral">{task.year}</span>
           </div>
         </div>
@@ -274,7 +213,7 @@ const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
   const currentYear = new Date().getFullYear();
   const [form, setForm] = useState({
     text: '', answer: '',
-    taskImage: null, // Добавлено поле для картинки условия
+    taskImage: null,
     diff: '1', year: currentYear,
     steps: [{ text: '', image: null }],
   });
@@ -301,8 +240,6 @@ const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
   };
 
   const handleSave = async () => {
-    // Условие может быть либо текстом, либо картинкой, либо и тем, и другим.
-    // Проверяем, что есть хоть что-то.
     if (!form.text.trim() && !form.taskImage) { 
       setError('Введите текст задания или прикрепите изображение к условию'); 
       return; 
@@ -312,7 +249,6 @@ const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
       return; 
     }
     
-    // Исключаем шаги, которые вообще пустые (и без текста, и без картинки)
     const validSteps = form.steps.filter(s => s.text.trim() !== '' || s.image !== null);
     if (validSteps.length === 0) { 
       setError('Добавьте хотя бы один шаг решения (с текстом или картинкой)'); 
@@ -321,18 +257,16 @@ const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
 
     setError('');
     setLoading(true);
-    // Имитация отправки запроса
-    await new Promise(r => setTimeout(r, 400));
-    setLoading(false);
     
-    onSave({
-      text: form.text,
-      taskImage: form.taskImage,
-      answer: form.answer,
+    // Передаем форму наверх. Логика отправки FormData теперь в родительском компоненте.
+    await onSave({
+      ...form,
       diff: Number(form.diff),
       year: Number(form.year),
       steps: validSteps,
     });
+    
+    setLoading(false);
   };
 
   return (
@@ -350,7 +284,6 @@ const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
         )}
 
         <div className="tl-modal__fields">
-          {/* Условие задания (Текст + Картинка) */}
           <div className="tl-modal__field">
             <label className="tl-modal__label">Условие задания *</label>
             <textarea
@@ -360,7 +293,6 @@ const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
               value={form.text}
               onChange={e => setField('text', e.target.value)}
             />
-            {/* Добавлена зона загрузки картинки к условию */}
             <ImageUploadZone
               label="Прикрепить картинку к условию"
               value={form.taskImage}
@@ -369,7 +301,6 @@ const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
             />
           </div>
 
-          {/* Решение по шагам */}
           <div className="tl-modal__field">
             <label className="tl-modal__label">Решение (по шагам)</label>
             <div className="tl-modal-steps-container">
@@ -408,7 +339,6 @@ const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
             </div>
           </div>
 
-          {/* Ответ */}
           <div className="tl-modal__field">
             <label className="tl-modal__label">Ответ *</label>
             <textarea
@@ -420,7 +350,6 @@ const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
             />
           </div>
 
-          {/* Сложность + Год */}
           <div className="tl-modal__row">
             <div className="tl-modal__field">
               <label className="tl-modal__label">Сложность</label>
@@ -458,47 +387,122 @@ const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
 };
 
 // ─── Модалка задать ДЗ ────────────────────────────────────────────────────────
-const AssignModal = ({ cart, onClose, onAssign }) => (
-  <div className="tl-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-    <div className="tl-modal">
-      <div className="tl-modal__header">
-        <h3 className="tl-modal__title">Задать домашнее задание</h3>
-        <button className="tl-modal__close" onClick={onClose}>✕</button>
-      </div>
+// ─── Модалка задать ДЗ ────────────────────────────────────────────────────────
+const AssignModal = ({ cart, onClose, onAssign }) => {
+  // Моковый список учеников (в будущем будет приходить с бэкенда)
+  const MOCK_STUDENTS = [
+    { id: 1, name: 'Иван Иванов' },
+    { id: 2, name: 'Анна Смирнова' },
+    { id: 3, name: 'Петр Петров' },
+    { id: 4, name: 'Елена Соколова' },
+    { id: 5, name: 'Дмитрий Волков' },
+    { id: 6, name: 'Мария Кузнецова' },
+  ];
 
-      <p style={{ fontSize: 13, color: '#888', margin: 0 }}>
-        Выбрано заданий: <strong style={{ color: '#00a86b' }}>{cart.length}</strong>
-      </p>
+  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [deadline, setDeadline] = useState('');
 
-      <div className="tl-assign-list">
-        {cart.map((t, i) => (
-          <div key={t.id} className="tl-assign-item">
-            <span className="tl-assign-num">{i + 1}</span>
-            <p className="tl-assign-text">{t.text}</p>
-            <span className={`tl-tag ${DIFF_CLASS[t.diff]}`}>{DIFF_LABEL[t.diff]}</span>
+  // Проверка: выбраны ли все ученики
+  const isAllSelected = selectedStudents.length === MOCK_STUDENTS.length && MOCK_STUDENTS.length > 0;
+
+  // Логика выбора всех учеников разом
+  const toggleAll = () => {
+    if (isAllSelected) {
+      setSelectedStudents([]); // Снять выбор со всех
+    } else {
+      setSelectedStudents(MOCK_STUDENTS.map(s => s.id)); // Выбрать всех
+    }
+  };
+
+  // Логика выбора одного ученика
+  const toggleStudent = (id) => {
+    if (selectedStudents.includes(id)) {
+      setSelectedStudents(selectedStudents.filter(sid => sid !== id));
+    } else {
+      setSelectedStudents([...selectedStudents, id]);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (selectedStudents.length === 0) {
+      alert('Пожалуйста, выберите хотя бы одного ученика');
+      return;
+    }
+    // Передаем выбранных учеников и дедлайн наверх
+    onAssign({
+      students: selectedStudents,
+      deadline: deadline
+    });
+  };
+
+  return (
+    <div className="tl-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="tl-modal">
+        <div className="tl-modal__header">
+          <h3 className="tl-modal__title">Задать домашнее задание</h3>
+          <button className="tl-modal__close" onClick={onClose}>✕</button>
+        </div>
+
+        {/* Компактный блок с количеством заданий */}
+        <div className="tl-modal__field" style={{ marginBottom: '4px' }}>
+          <p style={{ fontSize: 14, color: '#555', margin: 0, fontWeight: 600 }}>
+            Выбрано заданий: <strong style={{ color: '#00a86b', fontSize: 16 }}>{cart.length}</strong>
+          </p>
+        </div>
+
+        {/* Блок выбора учеников */}
+        <div className="tl-modal__field">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <label className="tl-modal__label">Кому назначить? *</label>
+            <label className="tl-student-select-all">
+              <input 
+                type="checkbox" 
+                checked={isAllSelected} 
+                onChange={toggleAll} 
+              />
+              <span>Выбрать всех</span>
+            </label>
           </div>
-        ))}
-      </div>
+          
+          <div className="tl-students-list">
+            {MOCK_STUDENTS.map(student => (
+              <label key={student.id} className="tl-student-item">
+                <input 
+                  type="checkbox" 
+                  className="tl-student-checkbox"
+                  checked={selectedStudents.includes(student.id)}
+                  onChange={() => toggleStudent(student.id)}
+                />
+                <div className="tl-student-avatar">{student.name.charAt(0)}</div>
+                <span className="tl-student-name">{student.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
 
-      <div className="tl-modal__field">
-        <label className="tl-modal__label">Срок сдачи (необязательно)</label>
-        <input
-          type="date"
-          className="tl-modal__textarea tl-modal__textarea--sm"
-          style={{ resize: 'none' }}
-          min={new Date().toISOString().split('T')[0]}
-        />
-      </div>
+        {/* Срок сдачи */}
+        <div className="tl-modal__field">
+          <label className="tl-modal__label">Срок сдачи (необязательно)</label>
+          <input
+            type="date"
+            className="tl-modal__textarea tl-modal__textarea--sm"
+            style={{ resize: 'none' }}
+            value={deadline}
+            onChange={e => setDeadline(e.target.value)}
+            min={new Date().toISOString().split('T')[0]}
+          />
+        </div>
 
-      <div className="tl-modal__footer">
-        <button className="tl-modal__cancel" onClick={onClose}>Отмена</button>
-        <button className="tl-modal__save" onClick={onAssign}>
-          Задать ученикам →
-        </button>
+        <div className="tl-modal__footer">
+          <button className="tl-modal__cancel" onClick={onClose}>Отмена</button>
+          <button className="tl-modal__save" onClick={handleSubmit}>
+            Задать ученикам →
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ─── Плавающая корзина ────────────────────────────────────────────────────────
 const CartWidget = ({ cart, onAssign }) => {
@@ -524,9 +528,28 @@ const TaskList = ({ examType, subject, groupName, subtypeName, onBack, cart, onC
   const [sort, setSort]           = useState('default');
   const [showModal, setShowModal] = useState(false);
   const [showAssign, setShowAssign] = useState(false);
-  const [tasks, setTasks]         = useState(MOCK_TASKS);
+  const [tasks, setTasks]         = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const sorted = getSorted(tasks, sort);
+  // 1. ПОЛУЧЕНИЕ ЗАДАНИЙ С БЭКЕНДА
+  useEffect(() => {
+    const fetchTasks = async () => {
+      setIsLoading(true);
+      try {
+        // TODO: Раскомментируй и подставь свой API
+        // Заметь: теперь мы передаем параметр sort прямиком на бэкенд!
+        // const response = await axios.get(`/api/tasks/?subtype=${subtypeName}&sort=${sort}`);
+        // setTasks(response.data);
+      } catch (error) {
+        console.error("Ошибка загрузки заданий:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // Эффект срабатывает каждый раз, когда меняется подтип ИЛИ пользователь меняет сортировку
+    fetchTasks();
+  }, [subtypeName, sort]); 
 
   const counts = {
     easy:   tasks.filter(t => t.diff === 1).length,
@@ -534,19 +557,54 @@ const TaskList = ({ examType, subject, groupName, subtypeName, onBack, cart, onC
     hard:   tasks.filter(t => t.diff === 3).length,
   };
 
-  const handleSave = (form) => {
-    const newTask = {
-      id: Date.now(),
-      text: form.text,
-      taskImage: form.taskImage, // Передаем картинку в новую задачу
-      steps: form.steps,
-      answer: form.answer,
-      diff: form.diff,
-      year: form.year,
-      pop: 0,
-    };
-    setTasks(prev => [newTask, ...prev]);
-    setShowModal(false);
+  // 2. ОТПРАВКА НОВОГО ЗАДАНИЯ НА БЭКЕНД
+  const handleSave = async (form) => {
+    // Подготовка данных для отправки файлов
+    const formData = new FormData();
+    formData.append('text', form.text);
+    formData.append('answer', form.answer);
+    formData.append('diff', form.diff);
+    formData.append('year', form.year);
+    
+    // Если есть картинка к условию - прикрепляем сам файл
+    if (form.taskImage?.file) {
+      formData.append('task_image', form.taskImage.file);
+    }
+
+    // Подготовка шагов решения
+    const stepsData = form.steps.map((step, index) => {
+      if (step.image?.file) {
+        formData.append(`step_image_${index}`, step.image.file);
+      }
+      return { text: step.text, imageIndex: step.image?.file ? index : null };
+    });
+    formData.append('steps', JSON.stringify(stepsData));
+
+    try {
+      // TODO: Раскомментируй для отправки на сервер
+      // const response = await axios.post('/api/tasks/', formData, {
+      //   headers: { 'Content-Type': 'multipart/form-data' }
+      // });
+      // const newTask = response.data;
+      
+      // ВРЕМЕННАЯ ЗАГЛУШКА (Удали, когда подключишь бэкенд)
+      const newTask = {
+        id: Date.now(),
+        text: form.text,
+        taskImage: form.taskImage?.previewUrl, // Для немедленного отображения в UI
+        steps: form.steps.map(s => ({ text: s.text, image: s.image?.previewUrl })),
+        answer: form.answer,
+        diff: form.diff,
+        year: form.year,
+        pop: 0,
+      };
+
+      setTasks(prev => [newTask, ...prev]); // Добавляем новую задачу локально (или можно сделать повторный GET запрос)
+      setShowModal(false);
+    } catch (error) {
+      console.error("Ошибка сохранения:", error);
+      alert("Не удалось сохранить задание");
+    }
   };
 
   const handleAssign = () => {
@@ -573,6 +631,7 @@ const TaskList = ({ examType, subject, groupName, subtypeName, onBack, cart, onC
             </div>
           </div>
           <div className="tl-header__actions">
+            {/* При смене значения в дропдауне, обновится стейт `sort`, и сработает useEffect с запросом */}
             <SortDropdown sort={sort} onChange={setSort} />
             <button className="tl-add-btn" onClick={() => setShowModal(true)}>
               + Добавить задание
@@ -590,7 +649,11 @@ const TaskList = ({ examType, subject, groupName, subtypeName, onBack, cart, onC
           )}
         </div>
 
-        {sorted.length === 0 ? (
+        {isLoading ? (
+          <div className="tl-empty">
+            <p className="tl-empty__text">Загрузка заданий...</p>
+          </div>
+        ) : tasks.length === 0 ? (
           <div className="tl-empty">
             <p className="tl-empty__icon">📋</p>
             <p className="tl-empty__text">Заданий пока нет</p>
@@ -598,7 +661,8 @@ const TaskList = ({ examType, subject, groupName, subtypeName, onBack, cart, onC
           </div>
         ) : (
           <div className="tl-list">
-            {sorted.map((task, i) => (
+            {/* Рендерим напрямую tasks, так как бэкенд вернет их уже отсортированными */}
+            {tasks.map((task, i) => (
               <TaskCard
                 key={task.id}
                 task={task}
@@ -611,7 +675,6 @@ const TaskList = ({ examType, subject, groupName, subtypeName, onBack, cart, onC
         )}
       </div>
 
-      {/* Плавающая корзина — всегда видна пока есть задания */}
       <CartWidget cart={cart} onAssign={() => setShowAssign(true)} />
 
       {showModal && (

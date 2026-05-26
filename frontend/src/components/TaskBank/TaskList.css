@@ -230,18 +230,88 @@
 .tl-cart-btn:hover { background: #00b872; transform: translateY(-1px); }
 
 /* ── Список заданий в модалке «Задать ДЗ» ───── */
-.tl-assign-list { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
-.tl-assign-item {
-  display: flex; align-items: flex-start; gap: 10px;
-  background: #f9f9f9; border-radius: 12px; padding: 10px 12px;
-  border: 1px solid #f0f0f0;
+/* ── Выбор учеников в модалке (вместо списка заданий) ──────── */
+.tl-students-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 8px;
+  background: #fafafa;
 }
-.tl-assign-num {
-  width: 24px; height: 24px; border-radius: 7px; flex-shrink: 0;
-  background: rgba(0,208,132,0.12); display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 800; color: #00a86b;
+
+/* Стилизация скроллбара для списка учеников */
+.tl-students-list::-webkit-scrollbar {
+  width: 6px;
 }
-.tl-assign-text { flex: 1; font-size: 13px; font-weight: 600; color: #333; line-height: 1.45; margin: 0 8px 0 0; }
+.tl-students-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tl-students-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+.tl-student-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tl-student-item:hover {
+  background: rgba(0, 208, 132, 0.08);
+}
+
+.tl-student-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #00d084;
+}
+
+/* Круглая аватарка с первой буквой имени */
+.tl-student-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 208, 132, 0.15);
+  color: #00a86b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tl-student-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Кнопка "Выбрать всех" */
+.tl-student-select-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #00a86b;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tl-student-select-all input {
+  cursor: pointer;
+  accent-color: #00d084;
+}
 
 /* ── Модалка ────────────────────────────────── */
 .tl-modal-overlay {
