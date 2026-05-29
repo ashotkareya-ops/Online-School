@@ -31,16 +31,28 @@ def get_me(request):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def setup_profile(request):
-    # Неподтверждённый учитель не может заполнить профиль
     if request.user.role == 'teacher' and not request.user.is_approved:
         return Response({'detail': 'Аккаунт ещё не подтверждён.'}, status=status.HTTP_403_FORBIDDEN)
 
     serializer = SetupProfileSerializer(request.user, data=request.data, partial=True)
     if serializer.is_valid():
         user = serializer.save()
+
+        # Создаём Subject-объекты в БД при заполнении профиля
+        from tasks.models import Subject, ExamType
+        exam_types = user.exam_type if isinstance(user.exam_type, list) else [user.exam_type]
+        subjects = user.subjects
+
+        for exam_key in exam_types:
+            exam_name = 'ОГЭ' if exam_key == 'oge' else 'ЕГЭ'
+            exam_obj, _ = ExamType.objects.get_or_create(name=exam_name)
+
+            subject_names = subjects if isinstance(subjects, list) else subjects.get(exam_key, [])
+            for subject_name in subject_names:
+                Subject.objects.get_or_create(name=subject_name, exam_type=exam_obj)
+
         return Response(UserSerializer(user).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
