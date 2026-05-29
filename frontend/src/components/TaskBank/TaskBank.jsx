@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import TaskList from './TaskList';
 import './TaskBank.css';
 
+const API_URL = import.meta.env.VITE_API_URL;
 const EXAM_LABELS = { oge: 'ОГЭ', ege: 'ЕГЭ' };
 const EXAM_ICONS  = { oge: '📝', ege: '🎓' };
 const EXAM_DESCS  = {
@@ -9,20 +10,29 @@ const EXAM_DESCS  = {
   ege: 'Единый государственный экзамен',
 };
 
+// ─── Вспомогательная функция для авторизованных запросов ─────────────────────
+const authFetch = (url, options = {}) => {
+  const token = localStorage.getItem('access_token');
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
 // ─── Модалка добавления группы и подтипов ─────────────────────────────────────
-const AddGroupModal = ({ onClose, onSave, subject }) => {
+const AddGroupModal = ({ onClose, onSave, subject, subjectId }) => {
   const [name, setName] = useState('');
   const [subtypes, setSubtypes] = useState([{ name: '' }]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleAddSubtype = () => {
-    setSubtypes([...subtypes, { name: '' }]);
-  };
+  const handleAddSubtype = () => setSubtypes([...subtypes, { name: '' }]);
 
   const handleRemoveSubtype = (index) => {
-    if (subtypes.length > 1) {
-      setSubtypes(subtypes.filter((_, i) => i !== index));
-    }
+    if (subtypes.length > 1) setSubtypes(subtypes.filter((_, i) => i !== index));
   };
 
   const handleSubtypeChange = (index, value) => {
@@ -31,29 +41,38 @@ const AddGroupModal = ({ onClose, onSave, subject }) => {
     setSubtypes(newSubtypes);
   };
 
-  const handleSave = () => {
-    if (!name.trim()) {
-      setError('Введите название задания (темы)');
-      return;
-    }
-
+  const handleSave = async () => {
+    if (!name.trim()) { setError('Введите название задания (темы)'); return; }
     const validSubtypes = subtypes.filter(s => s.name.trim() !== '');
-    if (validSubtypes.length === 0) {
-      setError('Добавьте хотя бы один подтип');
-      return;
-    }
+    if (validSubtypes.length === 0) { setError('Добавьте хотя бы один подтип'); return; }
 
     setError('');
-    
-    const newGroup = {
-      name: name.trim(),
-      subtypes: validSubtypes.map(sub => ({
-        name: sub.name.trim(),
-        total: 0 // Пока нет загруженных заданий
-      }))
-    };
+    setLoading(true);
 
-    onSave(newGroup);
+    try {
+      const response = await authFetch(`${API_URL}/api/tasks/groups/create/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject_id: subjectId,
+          name: name.trim(),
+          subtypes: validSubtypes.map(s => ({ name: s.name.trim() })),
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        setError(Object.values(err).flat().join(' '));
+        return;
+      }
+
+      const savedGroup = await response.json();
+      onSave(savedGroup); // Передаём реальный объект с id из БД
+    } catch {
+      setError('Ошибка соединения с сервером');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -63,7 +82,7 @@ const AddGroupModal = ({ onClose, onSave, subject }) => {
           <h3 className="tb-modal__title">Добавить новое задание</h3>
           <button className="tb-modal__close" onClick={onClose}>✕</button>
         </div>
-        
+
         <div className="tb-modal__crumb">
           Предмет: <strong>{subject}</strong>
         </div>
@@ -93,9 +112,9 @@ const AddGroupModal = ({ onClose, onSave, subject }) => {
                     onChange={e => handleSubtypeChange(i, e.target.value)}
                   />
                   {subtypes.length > 1 && (
-                    <button 
-                      type="button" 
-                      className="tb-subtype-remove-btn" 
+                    <button
+                      type="button"
+                      className="tb-subtype-remove-btn"
                       onClick={() => handleRemoveSubtype(i)}
                       title="Удалить подтип"
                     >
@@ -115,7 +134,9 @@ const AddGroupModal = ({ onClose, onSave, subject }) => {
 
         <div className="tb-modal__footer">
           <button className="tb-modal__cancel" onClick={onClose}>Отмена</button>
-          <button className="tb-modal__save" onClick={handleSave}>Добавить задание</button>
+          <button className="tb-modal__save" onClick={handleSave} disabled={loading}>
+            {loading ? 'Сохранение...' : 'Добавить задание'}
+          </button>
         </div>
       </div>
     </div>
@@ -176,14 +197,13 @@ const TaskGroup = ({ group, index, isOpen, onToggle, checked, counts, onSubtypeT
 );
 
 // ─── Шаг банка заданий ────────────────────────────────────────────────────────
-const TaskBankStep = ({ examType, subject, tasks, isLoading, onAddGroup, onBack, onOpenList }) => {
+const TaskBankStep = ({ examType, subject, subjectId, tasks, isLoading, onAddGroup, onBack, onOpenList }) => {
   const [openGroup, setOpenGroup] = useState(null);
   const [checked, setChecked]     = useState({});
   const [counts, setCounts]       = useState({});
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const handleToggleGroup = (id) =>
-    setOpenGroup(prev => prev === id ? null : id);
+  const handleToggleGroup = (id) => setOpenGroup(prev => prev === id ? null : id);
 
   const handleSubtypeToggle = (sid, total) => {
     setChecked(prev => {
@@ -202,8 +222,8 @@ const TaskBankStep = ({ examType, subject, tasks, isLoading, onAddGroup, onBack,
     }));
   };
 
-  const handleSaveNewGroup = (newGroup) => {
-    onAddGroup(newGroup);
+  const handleSaveNewGroup = (savedGroup) => {
+    onAddGroup(savedGroup);
     setShowAddModal(false);
   };
 
@@ -270,10 +290,11 @@ const TaskBankStep = ({ examType, subject, tasks, isLoading, onAddGroup, onBack,
       )}
 
       {showAddModal && (
-        <AddGroupModal 
-          subject={subject} 
-          onClose={() => setShowAddModal(false)} 
-          onSave={handleSaveNewGroup} 
+        <AddGroupModal
+          subject={subject}
+          subjectId={subjectId}
+          onClose={() => setShowAddModal(false)}
+          onSave={handleSaveNewGroup}
         />
       )}
     </div>
@@ -314,8 +335,8 @@ const SubjectStep = ({ examType, subjects, onSelect, onBack }) => (
     </div>
     <div className="tb-subjects-grid">
       {subjects.map(subject => (
-        <button key={subject} className="tb-subject-btn" onClick={() => onSelect(subject)}>
-          {subject}
+        <button key={subject.id} className="tb-subject-btn" onClick={() => onSelect(subject)}>
+          {subject.name}
           <span className="tb-subject-btn__arrow">→</span>
         </button>
       ))}
@@ -325,77 +346,76 @@ const SubjectStep = ({ examType, subjects, onSelect, onBack }) => (
 
 // ─── Корневой компонент ───────────────────────────────────────────────────────
 const TaskBank = ({ user }) => {
-  const [step, setStep]           = useState('exam');
-  const [selectedExam, setSelectedExam]       = useState(null);
-  const [selectedSubject, setSelectedSubject] = useState(null);
-  const [selectedGroup, setSelectedGroup]     = useState(null);
-  const [selectedSubtype, setSelectedSubtype] = useState(null);
+  const [step, setStep]                         = useState('exam');
+  const [selectedExam, setSelectedExam]         = useState(null);
+  const [selectedSubject, setSelectedSubject]   = useState(null); // { id, name }
+  const [selectedGroup, setSelectedGroup]       = useState(null);
+  const [selectedSubtype, setSelectedSubtype]   = useState(null);
 
-  const [taskData, setTaskData] = useState({});
+  // subjects из API: [{ id, name }]
+  const [subjects, setSubjects]   = useState([]);
+  const [taskData, setTaskData]   = useState({});  // { subjectId: [...groups] }
   const [isLoading, setIsLoading] = useState(false);
-  const [cart, setCart] = useState([]);
+  const [cart, setCart]           = useState([]);
 
-  // ВОССТАНОВЛЕННЫЕ ПЕРЕМЕННЫЕ ИЗ PROPS USER
-  const examTypes    = user?.exam_type || [];
-  const allSubjects  = user?.subjects  || [];
+  const examTypes   = user?.exam_type || [];
   const skipExamStep = examTypes.length === 1;
 
+  // Если один экзамен — сразу переходим к предметам
   useEffect(() => {
     if (skipExamStep && examTypes.length === 1) {
       setSelectedExam(examTypes[0]);
       setStep('subject');
     }
-  }, [skipExamStep, examTypes]);
+  }, []);
 
-  // ЗАГРУЗКА ДАННЫХ ИЗ БД (GET)
+  // Загрузка предметов при выборе экзамена
   useEffect(() => {
-    if (step === 'bank' && selectedSubject) {
-      const fetchGroups = async () => {
-        setIsLoading(true);
-        try {
-          // TODO: Подключить API
-          // const response = await axios.get(`/api/task-groups/?subject=${selectedSubject}&exam=${selectedExam}`);
-          // setTaskData(prev => ({ ...prev, [selectedSubject]: response.data }));
-          
-          // Заглушка, чтобы не падало, пока API нет:
-          if (!taskData[selectedSubject]) {
-             setTaskData(prev => ({ ...prev, [selectedSubject]: [] }));
-          }
-        } catch (error) {
-          console.error("Ошибка при загрузке тем:", error);
-        } finally {
-          setIsLoading(false);
+    if (!selectedExam) return;
+    const fetchSubjects = async () => {
+      try {
+        const res = await authFetch(`${API_URL}/api/tasks/subjects/?exam_type=${selectedExam}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSubjects(data); // [{ id, name }]
         }
-      };
+      } catch {
+        console.error('Ошибка загрузки предметов');
+      }
+    };
+    fetchSubjects();
+  }, [selectedExam]);
 
-      fetchGroups();
-    }
-  }, [step, selectedSubject, selectedExam, taskData]);
+  // Загрузка групп (категорий) при выборе предмета
+  useEffect(() => {
+    if (step !== 'bank' || !selectedSubject) return;
 
-  const handleAddGroup = async (newGroupData) => {
-    try {
-      // TODO: Отправка на сервер
-      // const response = await axios.post('/api/task-groups/', newGroupData);
-      // const savedGroup = response.data;
-      
-      // Временная генерация ID для фронтенда:
-      const savedGroup = { 
-        ...newGroupData, 
-        id: Date.now(),
-        subtypes: newGroupData.subtypes.map((sub, i) => ({
-          ...sub,
-          id: `new_${Date.now()}_${i}`
-        }))
-      }; 
+    // Если уже загружали для этого предмета — не перезапрашиваем
+    if (taskData[selectedSubject.id] !== undefined) return;
 
-      setTaskData(prev => ({
-        ...prev,
-        [selectedSubject]: [...(prev[selectedSubject] || []), savedGroup]
-      }));
-    } catch (error) {
-      console.error("Ошибка при создании темы:", error);
-      alert("Не удалось создать тему.");
-    }
+    const fetchGroups = async () => {
+      setIsLoading(true);
+      try {
+        const res = await authFetch(`${API_URL}/api/tasks/groups/?subject_id=${selectedSubject.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setTaskData(prev => ({ ...prev, [selectedSubject.id]: data }));
+        }
+      } catch {
+        console.error('Ошибка загрузки тем');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchGroups();
+  }, [step, selectedSubject]);
+
+  // Добавление новой группы (ответ уже пришёл с бэка, просто добавляем в стейт)
+  const handleAddGroup = (savedGroup) => {
+    setTaskData(prev => ({
+      ...prev,
+      [selectedSubject.id]: [...(prev[selectedSubject.id] || []), savedGroup],
+    }));
   };
 
   const toggleCartItem = (task) => {
@@ -408,14 +428,6 @@ const TaskBank = ({ user }) => {
   const handleAssign = () => {
     setCart([]);
     alert('ДЗ успешно задано ученикам!');
-  };
-
-  const getSubjectsForExam = (exam) => {
-    if (exam === 'ege')
-      return allSubjects.filter(s => s.includes('профильный') || s.includes('базовый') || !['Математика','Информатика','Физика','Химия','Биология'].includes(s));
-    if (exam === 'oge')
-      return allSubjects.filter(s => !s.includes('профильный') && !s.includes('базовый'));
-    return allSubjects;
   };
 
   const handleSelectExam    = (exam)    => { setSelectedExam(exam); setStep('subject'); };
@@ -431,27 +443,46 @@ const TaskBank = ({ user }) => {
     if (step === 'subject' && !skipExamStep) { setStep('exam'); return; }
   };
 
-  const currentTasks = taskData[selectedSubject] || [];
+  // Обновление счётчика total после добавления задания
+  const handleTaskAdded = (subtypeId) => {
+    setTaskData(prev => {
+      const groups = prev[selectedSubject.id] || [];
+      return {
+        ...prev,
+        [selectedSubject.id]: groups.map(group => ({
+          ...group,
+          subtypes: group.subtypes.map(sub =>
+            sub.id === subtypeId ? { ...sub, total: sub.total + 1 } : sub
+          ),
+        })),
+      };
+    });
+  };
+
+  const currentTasks = selectedSubject ? (taskData[selectedSubject.id] || []) : [];
 
   return (
     <>
       {step === 'list' && (
         <TaskList
           examType={selectedExam}
-          subject={selectedSubject}
+          subject={selectedSubject?.name}
+          subjectId={selectedSubject?.id}
           groupName={selectedGroup?.name}
-          subtypeName={selectedSubtype?.name}
+          subtype={selectedSubtype}
           onBack={handleBack}
           cart={cart}
           onCartToggle={toggleCartItem}
           onAssign={handleAssign}
+          onTaskAdded={handleTaskAdded}
         />
       )}
 
       {step === 'bank' && (
         <TaskBankStep
           examType={selectedExam}
-          subject={selectedSubject}
+          subject={selectedSubject?.name}
+          subjectId={selectedSubject?.id}
           tasks={currentTasks}
           isLoading={isLoading}
           onAddGroup={handleAddGroup}
@@ -463,7 +494,7 @@ const TaskBank = ({ user }) => {
       {step === 'subject' && (
         <SubjectStep
           examType={selectedExam}
-          subjects={getSubjectsForExam(selectedExam)}
+          subjects={subjects}
           onSelect={handleSelectSubject}
           onBack={skipExamStep ? undefined : handleBack}
         />

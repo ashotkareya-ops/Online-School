@@ -1,24 +1,27 @@
 from rest_framework import serializers
 from .models import User
 
-
 class UserSerializer(serializers.ModelSerializer):
     students_count = serializers.SerializerMethodField()
+    subject_links = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name',
             'role', 'is_profile_filled', 'is_approved',
-            'exam_type', 'subjects',
+            'exam_type', 'subjects', 'subject_links',
             'teacher_code', 'teacher', 'students_count'
         ]
 
     def get_students_count(self, obj):
-        if obj.role == 'teacher':
-            return obj.students.count()
-        return None
+        return obj.students.count() if obj.role == 'teacher' else None
 
+    def get_subject_links(self, obj):
+        return [
+            {'id': s.id, 'name': s.name, 'exam_type': s.exam_type.name}
+            for s in obj.subject_links.select_related('exam_type').all()
+        ]
 
 class SetupProfileSerializer(serializers.ModelSerializer):
     exam_type = serializers.ListField(

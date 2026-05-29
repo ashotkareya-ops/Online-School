@@ -38,18 +38,29 @@ def setup_profile(request):
     if serializer.is_valid():
         user = serializer.save()
 
-        # Создаём Subject-объекты в БД при заполнении профиля
         from tasks.models import Subject, ExamType
-        exam_types = user.exam_type if isinstance(user.exam_type, list) else [user.exam_type]
-        subjects = user.subjects
 
+        exam_types = user.exam_type if isinstance(user.exam_type, list) else [user.exam_type]
+        subjects_data = user.subjects  # { "oge": [...], "ege": [...] } или плоский список
+
+        subject_ids = []
         for exam_key in exam_types:
             exam_name = 'ОГЭ' if exam_key == 'oge' else 'ЕГЭ'
             exam_obj, _ = ExamType.objects.get_or_create(name=exam_name)
 
-            subject_names = subjects if isinstance(subjects, list) else subjects.get(exam_key, [])
-            for subject_name in subject_names:
-                Subject.objects.get_or_create(name=subject_name, exam_type=exam_obj)
+            if isinstance(subjects_data, dict):
+                names = subjects_data.get(exam_key, [])
+            else:
+                names = subjects_data  # старый плоский формат
+
+            for name in names:
+                subject_obj, _ = Subject.objects.get_or_create(
+                    name=name, exam_type=exam_obj
+                )
+                subject_ids.append(subject_obj.id)
+
+        # Привязываем Subject объекты к пользователю
+        user.subject_links.set(subject_ids)
 
         return Response(UserSerializer(user).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

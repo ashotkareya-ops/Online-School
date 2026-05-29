@@ -8,34 +8,18 @@ from .models import Task, TaskStep, TaskCategory, TaskSubtype, Subject, ExamType
 
 
 class SubjectListAPIView(APIView):
-    """Предметы учителя по выбранному типу экзамена."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         exam_type_param = request.query_params.get('exam_type', '').lower()
-        user_subjects = request.user.subjects  # JSONField из профиля
+        exam_name = 'ОГЭ' if exam_type_param == 'oge' else 'ЕГЭ'
 
-        # Поддержка старого формата (плоский список) и нового (словарь)
-        if isinstance(user_subjects, list):
-            subject_names = user_subjects
-        else:
-            subject_names = user_subjects.get(exam_type_param, [])
+        # Берём напрямую из БД через subject_links — никакой магии со строками
+        subjects = request.user.subject_links.filter(
+            exam_type__name=exam_name
+        ).select_related('exam_type')
 
-        if not subject_names:
-            return Response([])
-
-        exam_type_name = 'ОГЭ' if exam_type_param == 'oge' else 'ЕГЭ'
-        exam_type_obj, _ = ExamType.objects.get_or_create(name=exam_type_name)
-
-        # Только существующие предметы — не создаём новые здесь
-        subjects = Subject.objects.filter(
-            name__in=subject_names,
-            exam_type=exam_type_obj,
-        )
-
-        result = [{'id': s.id, 'name': s.name} for s in subjects]
-        return Response(result)
-
+        return Response([{'id': s.id, 'name': s.name} for s in subjects])
 
 class AvailableSubjectsAPIView(APIView):
     """Какие экзамены и предметы доступны учителю (для переключателя)."""
@@ -111,16 +95,7 @@ class TaskGroupListAPIView(APIView):
         return Response(data)
 
     def _has_subject_access(self, user, subject):
-        """Проверяет, что предмет входит в профиль пользователя."""
-        user_subjects = user.subjects
-        exam_key = 'oge' if subject.exam_type.name == 'ОГЭ' else 'ege'
-
-        if isinstance(user_subjects, list):
-            allowed_names = user_subjects
-        else:
-            allowed_names = user_subjects.get(exam_key, [])
-
-        return subject.name in allowed_names
+        return user.subject_links.filter(id=subject.id).exists()
 
 
 class TaskGroupCreateAPIView(APIView):
@@ -182,21 +157,15 @@ class TaskGroupCreateAPIView(APIView):
         }, status=status.HTTP_201_CREATED)
 
     def _has_subject_access(self, user, subject):
-        user_subjects = user.subjects
-        exam_key = 'oge' if subject.exam_type.name == 'ОГЭ' else 'ege'
-        if isinstance(user_subjects, list):
-            allowed_names = user_subjects
-        else:
-            allowed_names = user_subjects.get(exam_key, [])
-        return subject.name in allowed_names
-
+     return user.subject_links.filter(id=subject.id).exists()
 
 class TaskCreateAPIView(APIView):
-    """Создание задания учителем."""
     permission_classes = [IsAuthenticated]
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
+        from .storage import upload_file_to_s3
+
         data = request.data
         files = request.FILES
 
@@ -207,7 +176,7 @@ class TaskCreateAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Проверяем, что подтип принадлежит предмету учителя
+        # Проверяем существование подтипа и права доступа
         try:
             subtype = TaskSubtype.objects.select_related(
                 'category__subject__exam_type'
@@ -225,28 +194,32 @@ class TaskCreateAPIView(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        text = data.get('text', '').strip()
         answer = data.get('answer', '').strip()
-        diff = int(data.get('diff', 1))
-        year = int(data.get('year', 2025))
-        task_image = files.get('task_image', None)
-
         if not answer:
             return Response(
                 {"error": "Укажите ответ к заданию"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Загружаем картинку условия в S3 (если есть)
+        task_image_url = None
+        if 'task_image' in files:
+            try:
+                task_image_url = upload_file_to_s3(files['task_image'], folder='tasks/conditions')
+            except RuntimeError as e:
+                return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
+
         task = Task.objects.create(
             subtype_id=subtype_id,
             author=request.user,
-            text=text,
+            text=data.get('text', '').strip(),
             answer=answer,
-            diff=diff,
-            year=year,
-            task_image=task_image,
+            diff=int(data.get('diff', 1)),
+            year=int(data.get('year', 2025)),
+            task_image_url=task_image_url,
         )
 
+        # Шаги решения
         steps_raw = data.get('steps', '[]')
         try:
             steps_list = json.loads(steps_raw)
@@ -257,33 +230,31 @@ class TaskCreateAPIView(APIView):
             )
 
         for index, step_info in enumerate(steps_list):
-            step_text = step_info.get('text', '').strip()
-            image_index = step_info.get('imageIndex', None)
-            step_image_file = files.get(f'step_image_{image_index}') if image_index is not None else None
+            step_image_url = None
+            image_index = step_info.get('imageIndex')
+
+            if image_index is not None:
+                step_file = files.get(f'step_image_{image_index}')
+                if step_file:
+                    try:
+                        step_image_url = upload_file_to_s3(step_file, folder='tasks/steps')
+                    except RuntimeError as e:
+                        return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
 
             TaskStep.objects.create(
                 task=task,
                 step_number=index + 1,
-                text=step_text,
-                image=step_image_file,
+                text=step_info.get('text', '').strip(),
+                image_url=step_image_url,
             )
 
-        return Response(self._serialize_task(task, request.user), status=status.HTTP_201_CREATED)
+        return Response(self._serialize_task(task), status=status.HTTP_201_CREATED)
 
-    def _has_subject_access(self, user, subject):
-        user_subjects = user.subjects
-        exam_key = 'oge' if subject.exam_type.name == 'ОГЭ' else 'ege'
-        if isinstance(user_subjects, list):
-            allowed_names = user_subjects
-        else:
-            allowed_names = user_subjects.get(exam_key, [])
-        return subject.name in allowed_names
-
-    def _serialize_task(self, task, user):
+    def _serialize_task(self, task):
         return {
             'id': task.id,
             'text': task.text,
-            'taskImage': task.task_image.url if task.task_image else None,
+            'taskImage': task.task_image_url,  # теперь URL
             'answer': task.answer,
             'diff': task.diff,
             'year': task.year,
@@ -292,13 +263,14 @@ class TaskCreateAPIView(APIView):
             'steps': [
                 {
                     'text': step.text,
-                    'image': step.image.url if step.image else None,
+                    'image': step.image_url,  # теперь URL
                 }
                 for step in task.steps.all()
             ],
         }
 
-
+    def _has_subject_access(self, user, subject):
+        return user.subject_links.filter(id=subject.id).exists()
 class TaskListAPIView(APIView):
     """Список заданий по подтипу."""
     permission_classes = [IsAuthenticated]
@@ -348,7 +320,7 @@ class TaskListAPIView(APIView):
             {
                 'id': task.id,
                 'text': task.text,
-                'taskImage': task.task_image.url if task.task_image else None,
+                'taskImage': task.task_image_url,
                 'answer': task.answer,
                 'diff': task.diff,
                 'year': task.year,
@@ -357,7 +329,7 @@ class TaskListAPIView(APIView):
                 'steps': [
                     {
                         'text': step.text,
-                        'image': step.image.url if step.image else None,
+                        'image': step.image_url,
                     }
                     for step in task.steps.all()
                 ],
@@ -367,10 +339,4 @@ class TaskListAPIView(APIView):
         return Response(data)
 
     def _has_subject_access(self, user, subject):
-        user_subjects = user.subjects
-        exam_key = 'oge' if subject.exam_type.name == 'ОГЭ' else 'ege'
-        if isinstance(user_subjects, list):
-            allowed_names = user_subjects
-        else:
-            allowed_names = user_subjects.get(exam_key, [])
-        return subject.name in allowed_names
+        return user.subject_links.filter(id=subject.id).exists()

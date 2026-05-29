@@ -4,9 +4,16 @@ import os
 from dotenv import load_dotenv
 
 
+
+
 load_dotenv()
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # БЕЗОПАСНОСТЬ: берём из переменных окружения
 SECRET_KEY = os.environ.get('SECRET_KEY', 'временный-ключ-только-для-разработки')
@@ -126,3 +133,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Yandex Object Storage
+YS3_ACCESS_KEY = os.environ.get('YANDEX_ACCESS_KEY')
+YS3_SECRET_KEY = os.environ.get('YANDEX_SECRET_KEY')
+YS3_BUCKET_NAME = os.environ.get('YANDEX_BUCKET_NAME')
+YS3_ENDPOINT_URL = 'https://storage.yandexcloud.net'
+YS3_REGION = 'ru-central1'

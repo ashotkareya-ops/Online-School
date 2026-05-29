@@ -2,7 +2,6 @@ from django.db import models
 from django.conf import settings
 
 
-# 1. Иерархические модели
 class ExamType(models.Model):
     name = models.CharField(max_length=50)
 
@@ -34,12 +33,17 @@ class TaskSubtype(models.Model):
         return self.name
 
 
-# 2. Модели заданий
 class Task(models.Model):
-    subtype = models.ForeignKey(TaskSubtype, on_delete=models.CASCADE, related_name='tasks', null=True, blank=True)
+    subtype = models.ForeignKey(
+        TaskSubtype, on_delete=models.CASCADE,
+        related_name='tasks', null=True, blank=True
+    )
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     text = models.TextField(blank=True, null=True)
-    task_image = models.ImageField(upload_to='tasks/conditions/', blank=True, null=True)
+
+    # Вместо ImageField — URL из S3
+    task_image_url = models.URLField(max_length=500, blank=True, null=True)
+
     answer = models.TextField()
     diff = models.IntegerField(default=1)
     year = models.IntegerField()
@@ -47,14 +51,16 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.text[:50] if self.text else "Задание"
+        return self.text[:50] if self.text else f"Задание #{self.id}"
 
 
 class TaskStep(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='steps')
     step_number = models.IntegerField()
     text = models.TextField(blank=True, null=True)
-    image = models.ImageField(upload_to='tasks/solutions/', blank=True, null=True)
+
+    # Вместо ImageField — URL из S3
+    image_url = models.URLField(max_length=500, blank=True, null=True)
 
     def __str__(self):
-        return f"Шаг {self.step_number} для задания {self.task.id}"
+        return f"Шаг {self.step_number} → задание #{self.task_id}"
