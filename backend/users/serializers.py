@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import User
 
+
 class UserSerializer(serializers.ModelSerializer):
     students_count = serializers.SerializerMethodField()
     subject_links = serializers.SerializerMethodField()
@@ -23,13 +24,17 @@ class UserSerializer(serializers.ModelSerializer):
             for s in obj.subject_links.select_related('exam_type').all()
         ]
 
+
 class SetupProfileSerializer(serializers.ModelSerializer):
     exam_type = serializers.ListField(
         child=serializers.ChoiceField(choices=['oge', 'ege']),
         allow_empty=False
     )
-    subjects = serializers.ListField(
-        child=serializers.CharField(max_length=100),
+    # subjects принимается как словарь { "oge": [...], "ege": [...] }
+    subjects = serializers.DictField(
+        child=serializers.ListField(
+            child=serializers.CharField(max_length=100)
+        ),
         allow_empty=False
     )
 
@@ -46,6 +51,32 @@ class SetupProfileSerializer(serializers.ModelSerializer):
         if len(value.strip()) < 2:
             raise serializers.ValidationError('Фамилия должна быть не менее 2 символов')
         return value.strip()
+
+    def validate_subjects(self, value):
+        allowed_keys = {'oge', 'ege'}
+        for key in value:
+            if key not in allowed_keys:
+                raise serializers.ValidationError(
+                    f'Недопустимый тип экзамена: {key}. Допустимые значения: oge, ege'
+                )
+            if not value[key]:
+                raise serializers.ValidationError(
+                    f'Список предметов для {key.upper()} не может быть пустым'
+                )
+        return value
+
+    def validate(self, attrs):
+        exam_types = attrs.get('exam_type', [])
+        subjects = attrs.get('subjects', {})
+
+        # Каждый выбранный тип экзамена должен иметь хотя бы один предмет
+        for exam_key in exam_types:
+            if not subjects.get(exam_key):
+                exam_label = 'ОГЭ' if exam_key == 'oge' else 'ЕГЭ'
+                raise serializers.ValidationError(
+                    {'subjects': f'Выберите хотя бы один предмет для {exam_label}'}
+                )
+        return attrs
 
     def update(self, instance, validated_data):
         instance.first_name = validated_data.get('first_name', instance.first_name)

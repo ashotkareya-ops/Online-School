@@ -67,7 +67,7 @@ const AddGroupModal = ({ onClose, onSave, subject, subjectId }) => {
       }
 
       const savedGroup = await response.json();
-      onSave(savedGroup); // Передаём реальный объект с id из БД
+      onSave(savedGroup);
     } catch {
       setError('Ошибка соединения с сервером');
     } finally {
@@ -324,7 +324,7 @@ const ExamStep = ({ examTypes, onSelect }) => (
 );
 
 // ─── Шаг 2: Выбор предмета ───────────────────────────────────────────────────
-const SubjectStep = ({ examType, subjects, onSelect, onBack }) => (
+const SubjectStep = ({ examType, subjects, isLoadingSubjects, onSelect, onBack }) => (
   <div className="tb-step">
     {onBack && <button className="tb-back-btn" onClick={onBack}>← Назад</button>}
     <h2 className="tb-title">Выберите предмет</h2>
@@ -333,14 +333,30 @@ const SubjectStep = ({ examType, subjects, onSelect, onBack }) => (
       <span className="tb-crumb-sep">·</span>
       <span style={{ fontSize: '12px', color: '#aaa' }}>выберите предмет</span>
     </div>
-    <div className="tb-subjects-grid">
-      {subjects.map(subject => (
-        <button key={subject.id} className="tb-subject-btn" onClick={() => onSelect(subject)}>
-          {subject.name}
-          <span className="tb-subject-btn__arrow">→</span>
-        </button>
-      ))}
-    </div>
+
+    {isLoadingSubjects ? (
+      <div className="tb-empty">
+        <p className="tb-empty__text">Загрузка предметов...</p>
+      </div>
+    ) : subjects.length === 0 ? (
+      <div className="tb-empty">
+        <div className="tb-empty__icon">📚</div>
+        <p className="tb-empty__text">Нет доступных предметов</p>
+        <p className="tb-empty__hint">
+          Предметы для {EXAM_LABELS[examType]} не найдены в вашем профиле.
+          Проверьте настройки профиля.
+        </p>
+      </div>
+    ) : (
+      <div className="tb-subjects-grid">
+        {subjects.map(subject => (
+          <button key={subject.id} className="tb-subject-btn" onClick={() => onSelect(subject)}>
+            {subject.name}
+            <span className="tb-subject-btn__arrow">→</span>
+          </button>
+        ))}
+      </div>
+    )}
   </div>
 );
 
@@ -348,20 +364,20 @@ const SubjectStep = ({ examType, subjects, onSelect, onBack }) => (
 const TaskBank = ({ user }) => {
   const [step, setStep]                         = useState('exam');
   const [selectedExam, setSelectedExam]         = useState(null);
-  const [selectedSubject, setSelectedSubject]   = useState(null); // { id, name }
+  const [selectedSubject, setSelectedSubject]   = useState(null);
   const [selectedGroup, setSelectedGroup]       = useState(null);
   const [selectedSubtype, setSelectedSubtype]   = useState(null);
 
-  // subjects из API: [{ id, name }]
-  const [subjects, setSubjects]   = useState([]);
-  const [taskData, setTaskData]   = useState({});  // { subjectId: [...groups] }
-  const [isLoading, setIsLoading] = useState(false);
-  const [cart, setCart]           = useState([]);
+  const [subjects, setSubjects]         = useState([]);
+  const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
+  const [taskData, setTaskData]         = useState({});
+  const [isLoading, setIsLoading]       = useState(false);
+  const [cart, setCart]                 = useState([]);
 
-  const examTypes   = user?.exam_type || [];
+  const examTypes    = user?.exam_type || [];
   const skipExamStep = examTypes.length === 1;
 
-  // Если один экзамен — сразу переходим к предметам
+  // Если один тип экзамена — сразу переходим к предметам
   useEffect(() => {
     if (skipExamStep && examTypes.length === 1) {
       setSelectedExam(examTypes[0]);
@@ -369,34 +385,48 @@ const TaskBank = ({ user }) => {
     }
   }, []);
 
-  // Загрузка предметов при выборе экзамена
+  // Загрузка предметов при изменении выбранного экзамена.
+  // Сброс subjects перед запросом предотвращает показ старых данных
+  // при переключении с ОГЭ на ЕГЭ и обратно.
   useEffect(() => {
     if (!selectedExam) return;
+
     const fetchSubjects = async () => {
+      setSubjects([]);           // сбрасываем старый список сразу
+      setIsLoadingSubjects(true);
       try {
-        const res = await authFetch(`${API_URL}/api/tasks/subjects/?exam_type=${selectedExam}`);
+        const res = await authFetch(
+          `${API_URL}/api/tasks/subjects/?exam_type=${selectedExam}`
+        );
         if (res.ok) {
           const data = await res.json();
-          setSubjects(data); // [{ id, name }]
+          setSubjects(data);     // [{ id, name }] — только предметы нужного экзамена
+        } else {
+          console.error('Ошибка загрузки предметов:', res.status);
+          setSubjects([]);
         }
       } catch {
-        console.error('Ошибка загрузки предметов');
+        console.error('Ошибка соединения при загрузке предметов');
+        setSubjects([]);
+      } finally {
+        setIsLoadingSubjects(false);
       }
     };
+
     fetchSubjects();
-  }, [selectedExam]);
+  }, [selectedExam]);   // <-- зависимость ТОЛЬКО от selectedExam, не от step
 
   // Загрузка групп (категорий) при выборе предмета
   useEffect(() => {
     if (step !== 'bank' || !selectedSubject) return;
-
-    // Если уже загружали для этого предмета — не перезапрашиваем
     if (taskData[selectedSubject.id] !== undefined) return;
 
     const fetchGroups = async () => {
       setIsLoading(true);
       try {
-        const res = await authFetch(`${API_URL}/api/tasks/groups/?subject_id=${selectedSubject.id}`);
+        const res = await authFetch(
+          `${API_URL}/api/tasks/groups/?subject_id=${selectedSubject.id}`
+        );
         if (res.ok) {
           const data = await res.json();
           setTaskData(prev => ({ ...prev, [selectedSubject.id]: data }));
@@ -407,10 +437,10 @@ const TaskBank = ({ user }) => {
         setIsLoading(false);
       }
     };
+
     fetchGroups();
   }, [step, selectedSubject]);
 
-  // Добавление новой группы (ответ уже пришёл с бэка, просто добавляем в стейт)
   const handleAddGroup = (savedGroup) => {
     setTaskData(prev => ({
       ...prev,
@@ -430,20 +460,32 @@ const TaskBank = ({ user }) => {
     alert('ДЗ успешно задано ученикам!');
   };
 
-  const handleSelectExam    = (exam)    => { setSelectedExam(exam); setStep('subject'); };
-  const handleSelectSubject = (subject) => { setSelectedSubject(subject); setStep('bank'); };
+  const handleSelectExam = (exam) => {
+    // При смене экзамена сбрасываем выбранный предмет и кэш групп,
+    // чтобы не показывать данные от предыдущего экзамена
+    setSelectedExam(exam);
+    setSelectedSubject(null);
+    setTaskData({});
+    setStep('subject');
+  };
+
+  const handleSelectSubject = (subject) => {
+    setSelectedSubject(subject);
+    setStep('bank');
+  };
+
   const handleOpenList = (group, subtype) => {
     setSelectedGroup(group);
     setSelectedSubtype(subtype);
     setStep('list');
   };
+
   const handleBack = () => {
     if (step === 'list')    { setStep('bank'); return; }
     if (step === 'bank')    { setStep('subject'); return; }
     if (step === 'subject' && !skipExamStep) { setStep('exam'); return; }
   };
 
-  // Обновление счётчика total после добавления задания
   const handleTaskAdded = (subtypeId) => {
     setTaskData(prev => {
       const groups = prev[selectedSubject.id] || [];
@@ -495,6 +537,7 @@ const TaskBank = ({ user }) => {
         <SubjectStep
           examType={selectedExam}
           subjects={subjects}
+          isLoadingSubjects={isLoadingSubjects}
           onSelect={handleSelectSubject}
           onBack={skipExamStep ? undefined : handleBack}
         />

@@ -32,38 +32,54 @@ def get_me(request):
 @permission_classes([IsAuthenticated])
 def setup_profile(request):
     if request.user.role == 'teacher' and not request.user.is_approved:
-        return Response({'detail': 'Аккаунт ещё не подтверждён.'}, status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {'detail': 'Аккаунт ещё не подтверждён.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
 
     serializer = SetupProfileSerializer(request.user, data=request.data, partial=True)
-    if serializer.is_valid():
-        user = serializer.save()
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        from tasks.models import Subject, ExamType
+    user = serializer.save()
 
-        exam_types = user.exam_type if isinstance(user.exam_type, list) else [user.exam_type]
-        subjects_data = user.subjects  # { "oge": [...], "ege": [...] } или плоский список
+    from tasks.models import Subject, ExamType
 
-        subject_ids = []
-        for exam_key in exam_types:
-            exam_name = 'ОГЭ' if exam_key == 'oge' else 'ЕГЭ'
-            exam_obj, _ = ExamType.objects.get_or_create(name=exam_name)
+    exam_types = user.exam_type if isinstance(user.exam_type, list) else [user.exam_type]
 
-            if isinstance(subjects_data, dict):
-                names = subjects_data.get(exam_key, [])
-            else:
-                names = subjects_data  # старый плоский формат
+    # subjects ВСЕГДА словарь { "oge": [...], "ege": [...] } — гарантировано сериализатором
+    subjects_data = user.subjects
 
-            for name in names:
-                subject_obj, _ = Subject.objects.get_or_create(
-                    name=name, exam_type=exam_obj
-                )
-                subject_ids.append(subject_obj.id)
+    if not isinstance(subjects_data, dict):
+        return Response(
+            {'subjects': 'Ожидается объект вида {"oge": [...], "ege": [...]}'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
-        # Привязываем Subject объекты к пользователю
-        user.subject_links.set(subject_ids)
+    subject_ids = []
 
-        return Response(UserSerializer(user).data)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    for exam_key in exam_types:
+        exam_name = 'ОГЭ' if exam_key == 'oge' else 'ЕГЭ'
+        exam_obj, _ = ExamType.objects.get_or_create(name=exam_name)
+
+        # Берём только предметы для конкретного типа экзамена
+        names = subjects_data.get(exam_key, [])
+
+        for name in names:
+            name = name.strip()
+            if not name:
+                continue
+            subject_obj, _ = Subject.objects.get_or_create(
+                name=name,
+                exam_type=exam_obj
+            )
+            subject_ids.append(subject_obj.id)
+
+    # Привязываем Subject-объекты к пользователю (заменяем полностью)
+    user.subject_links.set(subject_ids)
+
+    return Response(UserSerializer(user).data)
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -80,7 +96,10 @@ def register(request):
         return Response({'email': ['Введите корректный email']}, status=400)
 
     if not re.match(r'^[\w]{3,30}$', username):
-        return Response({'username': ['Имя пользователя: 3-30 символов, только буквы и цифры']}, status=400)
+        return Response(
+            {'username': ['Имя пользователя: 3-30 символов, только буквы и цифры']},
+            status=400
+        )
 
     if len(password) < 8:
         return Response({'password': ['Пароль должен быть не менее 8 символов']}, status=400)
@@ -92,7 +111,10 @@ def register(request):
         return Response({'error': 'Заполните все поля'}, status=400)
 
     if User.objects.filter(email=email).exists():
-        return Response({'email': ['Пользователь с таким email уже существует']}, status=400)
+        return Response(
+            {'email': ['Пользователь с таким email уже существует']},
+            status=400
+        )
 
     if User.objects.filter(username=username).exists():
         return Response({'username': ['Это имя пользователя уже занято']}, status=400)
@@ -102,9 +124,16 @@ def register(request):
         if not teacher_code:
             return Response({'teacher_code': ['Введите код учителя']}, status=400)
         try:
-            teacher = User.objects.get(teacher_code=teacher_code, role='teacher', is_approved=True)
+            teacher = User.objects.get(
+                teacher_code=teacher_code,
+                role='teacher',
+                is_approved=True
+            )
         except User.DoesNotExist:
-            return Response({'teacher_code': ['Неверный код учителя или учитель ещё не подтверждён']}, status=400)
+            return Response(
+                {'teacher_code': ['Неверный код учителя или учитель ещё не подтверждён']},
+                status=400
+            )
 
     user = User.objects.create_user(
         username=username,

@@ -2,15 +2,11 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
+from dotenv import load_dotenv  # Добавили импорт
 
-
-
-
-load_dotenv()
-
-
+# Находим путь к файлу .env (он должен лежать в корне папки backend)
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -136,8 +132,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Yandex Object Storage
-YS3_ACCESS_KEY = os.environ.get('YANDEX_ACCESS_KEY')
-YS3_SECRET_KEY = os.environ.get('YANDEX_SECRET_KEY')
-YS3_BUCKET_NAME = os.environ.get('YANDEX_BUCKET_NAME')
-YS3_ENDPOINT_URL = 'https://storage.yandexcloud.net'
-YS3_REGION = 'ru-central1'
+YANDEX_ACCESS_KEY = os.environ.get('YANDEX_ACCESS_KEY')
+YANDEX_SECRET_KEY = os.environ.get('YANDEX_SECRET_KEY')
+YANDEX_BUCKET_NAME = os.environ.get('YANDEX_BUCKET_NAME')
+YS3_ENDPOINT_URL = os.environ.get('YS3_ENDPOINT_URL')
+YS3_REGION = os.environ.get('YS3_REGION')

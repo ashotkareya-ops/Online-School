@@ -168,10 +168,17 @@ const TaskCard = ({ task, index, cart, onCartToggle }) => {
             <img src={task.taskImage} alt="К условию" className="tl-card__task-img" />
           )}
           <div className="tl-card__meta">
-            <span className={`tl-tag ${DIFF_CLASS[task.diff] || DIFF_CLASS[1]}`}>{DIFF_LABEL[task.diff]}</span>
-            <span className="tl-tag tl-tag--neutral">♥ {task.pop || 0}</span>
+            <span className={`tl-tag ${DIFF_CLASS[task.diff] || DIFF_CLASS[1]}`}>
+              {DIFF_LABEL[task.diff]}
+            </span>
             <span className="tl-tag tl-tag--neutral">{task.year}</span>
-            {task.isMine && <span className="tl-tag tl-tag--mine">Моё</span>}
+            
+            {/* Убираем лайки, ставим иконку «Моё задание» */}
+            {task.isMine && (
+              <span className="tl-tag tl-tag--mine-icon" title="Задание добавлено мной">
+                Добавленное мной
+              </span>
+            )}
           </div>
         </div>
         <div className="tl-card-actions">

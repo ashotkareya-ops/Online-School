@@ -49,11 +49,17 @@ const StudentForm = ({ onSave }) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
+
+    // Формируем subjects как словарь { examType: [subjects] }
+    const subjectsByExam = {
+      [formData.examType]: formData.subjects,
+    };
+
     const result = await updateProfile({
       first_name: formData.firstName.trim(),
       last_name: formData.lastName.trim(),
       exam_type: [formData.examType],
-      subjects: formData.subjects,
+      subjects: subjectsByExam,
     });
     setIsLoading(false);
     if (result.success) {
@@ -133,16 +139,25 @@ const TeacherForm = ({ onSave }) => {
     firstName: '',
     lastName: '',
     examTypes: [],
-    subjects: [],
+    // subjects теперь хранится как словарь { oge: [], ege: [] }
+    // чтобы при снятии галочки с экзамена не терять выбор по другому
+    subjectsByExam: { oge: [], ege: [] },
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const availableSubjects = useMemo(() => {
-    if (formData.examTypes.length === 0) return [];
-    const subs = new Set();
-    formData.examTypes.forEach(t => SUBJECTS[t]?.forEach(s => subs.add(s)));
-    return [...subs];
+  // Все выбранные предметы плоским списком — только для отображения счётчика
+  const allSelectedSubjects = useMemo(() => {
+    return formData.examTypes.flatMap(t => formData.subjectsByExam[t] || []);
+  }, [formData.examTypes, formData.subjectsByExam]);
+
+  // Доступные предметы для каждого активного типа экзамена
+  const availableSubjectsByExam = useMemo(() => {
+    const result = {};
+    formData.examTypes.forEach(t => {
+      result[t] = SUBJECTS[t] || [];
+    });
+    return result;
   }, [formData.examTypes]);
 
   const toggleExamType = (type) => {
@@ -150,40 +165,48 @@ const TeacherForm = ({ onSave }) => {
       const newTypes = prev.examTypes.includes(type)
         ? prev.examTypes.filter(t => t !== type)
         : [...prev.examTypes, type];
-      const newAvailable = new Set();
-      newTypes.forEach(t => SUBJECTS[t]?.forEach(s => newAvailable.add(s)));
-      return {
-        ...prev,
-        examTypes: newTypes,
-        subjects: prev.subjects.filter(s => newAvailable.has(s)),
-      };
+      return { ...prev, examTypes: newTypes };
     });
   };
 
-  const toggleSubject = (sub) => {
-    setFormData(prev => ({
-      ...prev,
-      subjects: prev.subjects.includes(sub)
-        ? prev.subjects.filter(s => s !== sub)
-        : [...prev.subjects, sub],
-    }));
+  const toggleSubject = (examKey, sub) => {
+    setFormData(prev => {
+      const current = prev.subjectsByExam[examKey] || [];
+      const updated = current.includes(sub)
+        ? current.filter(s => s !== sub)
+        : [...current, sub];
+      return {
+        ...prev,
+        subjectsByExam: { ...prev.subjectsByExam, [examKey]: updated },
+      };
+    });
   };
 
   const isValid =
     formData.firstName.trim().length >= 2 &&
     formData.lastName.trim().length >= 2 &&
     formData.examTypes.length > 0 &&
-    formData.subjects.length > 0;
+    allSelectedSubjects.length > 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
+
+    // Собираем только те экзамены и предметы, которые реально выбраны
+    const subjectsByExam = {};
+    formData.examTypes.forEach(examKey => {
+      const selected = formData.subjectsByExam[examKey] || [];
+      if (selected.length > 0) {
+        subjectsByExam[examKey] = selected;
+      }
+    });
+
     const result = await updateProfile({
       first_name: formData.firstName.trim(),
       last_name: formData.lastName.trim(),
       exam_type: formData.examTypes,
-      subjects: formData.subjects,
+      subjects: subjectsByExam, // { oge: [...], ege: [...] }
     });
     setIsLoading(false);
     if (result.success) {
@@ -226,23 +249,29 @@ const TeacherForm = ({ onSave }) => {
         ))}
       </div>
 
-      {availableSubjects.length > 0 && (
-        <div className="subjects-selection">
-          <p className="label">Предметы которые преподаёте:</p>
+      {/* Для каждого выбранного типа экзамена — своя секция предметов */}
+      {formData.examTypes.map(examKey => (
+        <div key={examKey} className="subjects-selection">
+          <p className="label">
+            Предметы {EXAM_LABELS[examKey]}, которые преподаёте:
+          </p>
           <div className="subjects-grid">
-            {availableSubjects.map(sub => (
-              <div
-                key={sub}
-                className={`subject-chip ${formData.subjects.includes(sub) ? 'selected' : ''}`}
-                onClick={() => toggleSubject(sub)}
-              >
-                {sub}
-                {formData.subjects.includes(sub) && <span className="check-icon">✓</span>}
-              </div>
-            ))}
+            {(availableSubjectsByExam[examKey] || []).map(sub => {
+              const isSelected = (formData.subjectsByExam[examKey] || []).includes(sub);
+              return (
+                <div
+                  key={sub}
+                  className={`subject-chip ${isSelected ? 'selected' : ''}`}
+                  onClick={() => toggleSubject(examKey, sub)}
+                >
+                  {sub}
+                  {isSelected && <span className="check-icon">✓</span>}
+                </div>
+              );
+            })}
           </div>
         </div>
-      )}
+      ))}
 
       {error && <span className="modal-error">{error}</span>}
 
@@ -251,7 +280,7 @@ const TeacherForm = ({ onSave }) => {
         className="modal-submit"
         disabled={isLoading || !isValid}
       >
-        {isLoading ? 'Сохранение...' : `Сохранить (${formData.subjects.length} предм.)`}
+        {isLoading ? 'Сохранение...' : `Сохранить (${allSelectedSubjects.length} предм.)`}
       </button>
     </form>
   );
