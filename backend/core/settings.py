@@ -1,15 +1,15 @@
 from pathlib import Path
 from datetime import timedelta
 import os
-from dotenv import load_dotenv
-from dotenv import load_dotenv  # Добавили импорт
+from dotenv import load_dotenv 
+
 
 # Находим путь к файлу .env (он должен лежать в корне папки backend)
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(os.path.join(BASE_DIR, '.env'))
+load_dotenv(BASE_DIR / '.env')
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL  = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # БЕЗОПАСНОСТЬ: берём из переменных окружения
 SECRET_KEY = os.environ.get('SECRET_KEY', 'временный-ключ-только-для-разработки')
@@ -132,8 +132,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Yandex Object Storage
-YANDEX_ACCESS_KEY = os.environ.get('YANDEX_ACCESS_KEY')
-YANDEX_SECRET_KEY = os.environ.get('YANDEX_SECRET_KEY')
-YANDEX_BUCKET_NAME = os.environ.get('YANDEX_BUCKET_NAME')
-YS3_ENDPOINT_URL = os.environ.get('YS3_ENDPOINT_URL')
-YS3_REGION = os.environ.get('YS3_REGION')
+YANDEX_ACCESS_KEY  = os.getenv('YANDEX_ACCESS_KEY', '')
+YANDEX_SECRET_KEY  = os.getenv('YANDEX_SECRET_KEY', '')
+YANDEX_BUCKET_NAME = os.getenv('YANDEX_BUCKET_NAME', 'school-tr-storage')
+YS3_ENDPOINT_URL   = os.getenv('YS3_ENDPOINT_URL', 'https://storage.yandexcloud.net')
+YS3_REGION         = os.getenv('YS3_REGION', 'ru-central1')
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024   # 10 МБ
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024 
+
+
