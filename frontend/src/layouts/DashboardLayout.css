@@ -269,18 +269,17 @@
   color: #888;
 }
 
-
 /* Адаптив для мобильных устройств */
 @media (max-width: 768px) {
   .dashboard-wrapper {
-    flex-direction: column; /* Сайдбар теперь сверху, контент под ним */
+    flex-direction: column;
   }
 
   .sidebar {
     width: 100% !important;
     height: auto;
     padding: 10px 20px;
-    flex-direction: column; /* Логотип и меню в одну линию */
+    flex-direction: column;
     justify-content: space-between;
   }
 
@@ -290,14 +289,13 @@
   }
 
   .dashboard-main {
-    padding: 10px !important; /* Уменьшаем отступы, чтобы было больше места */
+    padding: 10px !important;
   }
 
   .tasks-grid {
-    grid-template-columns: 1fr !important; /* Карточки одна под другой */
+    grid-template-columns: 1fr !important;
   }
 }
-
 
 .error-header {
   margin-bottom: 30px;
@@ -319,19 +317,19 @@
 /* Адаптив для мобильных устройств */
 @media (max-width: 768px) {
   .error-card {
-    flex-direction: column; /* Элементы встают друг под друга */
-    align-items: flex-start; /* Выравнивание по левому краю */
-    gap: 15px; /* Расстояние между элементами внутри карточки */
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
     padding: 15px;
   }
 
   .btn-solve {
-    width: 100%; /* Кнопка на всю ширину на телефоне */
+    width: 100%;
     text-align: center;
   }
   
   .error-badge {
-    margin-right: 0; /* Убираем правый отступ, так как теперь элементы в колонку */
+    margin-right: 0;
   }
 }
 
@@ -374,7 +372,41 @@
 .empty-errors {
   text-align: center;
   padding: 50px;
-  color: var(--brand-green);
+  color: #00a86b;
   font-weight: bold;
   font-size: 20px;
+}
+
+/* ── Новые стили для разделов фильтрации тренажера ── */
+.tabs-header {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.tab-button {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+  background: #f9f9f9;
+  border-color: rgba(0, 209, 129, 0.3);
+}
+
+.tab-button.active {
+  background: #38d371;
+  color: white;
+  color: #fff;
+  border-color: #2ccb67;
+    border-bottom-color: rgb(44, 203, 103);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 168, 107, 0.2);
 }

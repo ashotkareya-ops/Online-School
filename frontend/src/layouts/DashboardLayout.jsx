@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import SetupProfileModal from '../components/SetupProfileModal/SetupProfileModal';
 import TaskBank from '../components/TaskBank/TaskBank';
 import './DashboardLayout.css';
+import Schedule from '../components/Schedule/Schedule';
 
 const EXAM_LABELS = { oge: 'ОГЭ', ege: 'ЕГЭ' };
 
@@ -80,6 +81,14 @@ const DashboardLayout = () => {
     { id: 4, title: 'Тригонометрия: синусы', subject: 'Математика', status: 'todo' },
   ]);
 
+  // Демонстрационные данные для наполнения раздела Тренажер
+  const [trainingTopics] = useState([
+    { id: 1, title: 'Тренажер: Квадратные уравнения', subject: 'Математика', count: '25 заданий' },
+    { id: 2, title: 'Тренажер: Арифметическая прогрессия', subject: 'Математика', count: '15 заданий' },
+    { id: 3, title: 'Тренажер: Синтаксис и циклы JavaScript', subject: 'Программирование', count: '30 заданий' },
+    { id: 4, title: 'Тренажер: Методы массивов (map, filter)', subject: 'Программирование', count: '20 заданий' },
+  ]);
+
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -96,6 +105,8 @@ const DashboardLayout = () => {
 
   const handleTabClick = (tab) => {
     if (isPendingTeacher && tab !== 'home' && tab !== 'profile') return;
+    // Сбрасываем фильтр по предметам на "Все" при переключении вкладок для корректного отображения
+    setActiveSubject('Все');
     setActiveTab(tab);
   };
 
@@ -103,8 +114,10 @@ const DashboardLayout = () => {
 
   const navItems = [
     { key: 'home', label: 'Главная' },
+    { key: 'training', label:  'Тренажер' },
     { key: 'homework-list', label: 'Домашняя работа' },
     { key: 'homework-status', label: user.role === 'teacher' ? 'Банк заданий' : 'Мои ошибки' },
+    { key: 'schedule', label: 'Расписание' },
     { key: 'profile', label: 'Профиль' },
   ];
 
@@ -122,6 +135,55 @@ const DashboardLayout = () => {
             </p>
           </div>
         );
+
+      case 'training': {
+        const subjects = ['Все', 'Математика', 'Программирование'];
+        const filteredTopics = activeSubject === 'Все'
+          ? trainingTopics
+          : trainingTopics.filter(topic => topic.subject === activeSubject);
+
+        return (
+          <div className="main-container">
+            <div className="content-header">
+              <h2>Интерактивный тренажер</h2>
+            </div>
+            
+            <div className="tabs-header">
+              {subjects.map(subject => (
+                <button
+                  key={subject}
+                  className={`tab-button ${activeSubject === subject ? 'active' : ''}`}
+                  onClick={() => setActiveSubject(subject)}
+                >
+                  {subject}
+                </button>
+              ))}
+            </div>
+
+            <div className="tasks-grid">
+              {filteredTopics.length > 0 ? (
+                filteredTopics.map(topic => (
+                  <div key={topic.id} className="task-card">
+                    <div className="task-info">
+                      <span className="subject-tag">{topic.subject}</span>
+                      <span className="deadline">{topic.count}</span>
+                    </div>
+                    <h3>{topic.title}</h3>
+                    <button 
+                      className="btn-start" 
+                      onClick={() => alert(`Запуск тренажера: ${topic.title}`)}
+                    >
+                      Начать тренировку
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-errors">Темы для выбранного предмета отсутствуют</div>
+              )}
+            </div>
+          </div>
+        );
+      }
 
       case 'homework-list': {
         const subjects = ['Все', 'Математика', 'Программирование'];
@@ -172,12 +234,13 @@ const DashboardLayout = () => {
         );
       }
 
+      case 'schedule':
+        return <Schedule />;
+
       case 'homework-status':
-        // Учитель — показываем банк заданий с навигацией
         if (user.role === 'teacher') {
           return <TaskBank user={user} />;
         }
-        // Ученик — ошибки
         return (
           <div className="main-container">
             <div className="error-header">

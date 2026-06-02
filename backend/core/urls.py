@@ -12,5 +12,6 @@ urlpatterns = [
     path('api/user/me/', get_me, name='get_me'),
     path('api/user/setup/', setup_profile, name='setup_profile'),
     path('api/register/', register, name='register'),
-    path('api/tasks/', include('tasks.urls')),  # ← добавить
+    path('api/tasks/', include('tasks.urls')),  
+    path('api/', include('lessons.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

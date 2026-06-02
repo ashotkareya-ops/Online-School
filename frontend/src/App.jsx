@@ -19,7 +19,6 @@ function App() {
         } 
       />
 
-      {/* Если пользователь ввел несуществующий адрес */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

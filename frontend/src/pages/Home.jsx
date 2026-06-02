@@ -10,7 +10,6 @@ const Home = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Автоматический редирект, если пользователь вошел
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');
