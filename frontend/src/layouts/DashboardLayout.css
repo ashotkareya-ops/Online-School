@@ -402,10 +402,9 @@
 }
 
 .tab-button.active {
-  background: #34d06d;
+  background: #29ca64;
   color: white;
   border-color: #00a86b;
-  border-bottom-color: rgb(0, 168, 107);
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(0, 168, 107, 0.2);
 }

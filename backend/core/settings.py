@@ -31,12 +31,14 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'users',
     'tasks',
+    'lessons',
 ]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -140,5 +142,8 @@ YS3_REGION         = os.getenv('YS3_REGION', 'ru-central1')
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024   # 10 МБ
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024 
+
+CORS_ALLOW_ALL_ORIGINS = True # На продакшене заменишь на URL своего фронтенда
+
 
 
