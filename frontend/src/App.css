@@ -145,8 +145,8 @@
 }
 
 .tab-button.active {
-  color: var(--brand-green);
-  border-bottom-color: var(--brand-green);
+  color: #fff;
+  border-bottom-color: #00a86b;
 }
 
 /* Колонки */

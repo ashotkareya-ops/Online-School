@@ -1,0 +1,219 @@
+/* ═══════════════════════════════════════════════════════
+   Schedule — Apple Calendar style, iOS-inspired
+   ═══════════════════════════════════════════════════════ */
+
+.sch-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  background: #ffffff;
+  color: #1c1c1e;
+}
+
+/* ── Шапка ──────────────────────────────────────────── */
+.sch-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 12px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.sch-header__title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 2px;
+  letter-spacing: -0.5px;
+}
+
+.sch-header__sub {
+  font-size: 14px;
+  color: #8e8e93;
+  margin: 0;
+}
+
+/* ── Скроллируемая зона ─────────────────────────────── */
+.sch-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 40px;
+}
+
+/* ── Блок месяца ────────────────────────────────────── */
+.sch-month-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1c1c1e;
+  padding: 20px 16px 12px;
+  margin: 0;
+}
+
+/* ── Дни недели ─────────────────────────────────────── */
+.sch-weekday-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 0 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.sch-weekday-label {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: #3c3c43;
+  text-transform: lowercase;
+  padding: 8px 0;
+}
+.sch-weekday-label--weekend { color: #8e8e93; }
+
+/* ── Строка недели ──────────────────────────────────── */
+.sch-week-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 0 8px;
+  margin-bottom: 16px;
+  align-items: start;
+}
+
+/* ── Колонка дня ────────────────────────────────────── */
+.sch-day-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px;
+  min-height: 80px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.sch-day-col:hover { background: #f2f2f7; }
+
+/* ── Число дня ──────────────────────────────────────── */
+.sch-day-num {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 500;
+  border-radius: 50%;
+  margin-bottom: 8px;
+}
+
+.sch-day-num--today {
+  background: #ff3b30;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Карточки (События) ─────────────────────────────── */
+.sch-day-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.sch-chip {
+  border-radius: 6px;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sch-chip__title {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sch-chip__time {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* ── Модалки и Формы ────────────────────────────────── */
+.sch-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.sch-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.sch-modal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #f2f2f7;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.sch-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.sch-form__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #8e8e93;
+}
+
+.sch-form__input {
+  border: 1px solid #e5e5ea;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sch-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.sch-btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.sch-btn--primary { background: #007aff; color: #fff; }
+.sch-btn--ghost { background: #f2f2f7; color: #007aff; }

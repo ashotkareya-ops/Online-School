@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 
 const Homework = () => {
   const [activeSubject, setActiveSubject] = useState('Все');
-
   // Пример данных
   const homeworkData = [
     { id: 1, title: 'Реакция на события в JS', subject: 'Программирование', status: 'todo' },
     { id: 2, title: 'Квадратные уравнения', subject: 'Математика', status: 'review' },
-    { id: 3, title: 'Работа с API', subject: 'Программирование', status: 'review' },
+    { id: 3, title: 'Работа', subject: 'Программирование', status: 'review' },
     { id: 4, title: 'Тригонометрия: синусы', subject: 'Математика', status: 'todo' },
   ];
 
+
+
+  
   // Фильтрация
-  const filtered = activeSubject === 'Все' 
-    ? homeworkData 
+  const filtered = activeSubject === 'Все'
+    ? homeworkData
     : homeworkData.filter(h => h.subject === activeSubject);
 
   const todoTasks = filtered.filter(h => h.status === 'todo');
@@ -23,6 +25,8 @@ const Homework = () => {
     <div className="main-container">
       {/* 1. Прямоугольники статистики */}
       <div className="stats-container">
+
+
         <div className="stat-card todo">
           <span className="stat-label">Нужно сделать</span>
           <span className="stat-value">{todoTasks.length}</span>
@@ -36,7 +40,7 @@ const Homework = () => {
       {/* 2. Вкладки предметов */}
       <div className="tabs-header">
         {['Все', 'Математика', 'Программирование'].map(subject => (
-          <button 
+          <button
             key={subject}
             className={`tab-button ${activeSubject === subject ? 'active' : ''}`}
             onClick={() => setActiveSubject(subject)}
@@ -46,6 +50,9 @@ const Homework = () => {
         ))}
       </div>
 
+
+
+
       {/* 3. Колонки */}
       <div className="homework-grid">
         <div className="homework-column">
@@ -54,6 +61,7 @@ const Homework = () => {
             <div key={hw.id} className="hw-card">{hw.title}</div>
           ))}
         </div>
+
         <div className="homework-column">
           <h3>Отправленные</h3>
           {reviewTasks.map(hw => (
@@ -61,6 +69,7 @@ const Homework = () => {
           ))}
         </div>
       </div>
+      
     </div>
   );
 };

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar/Navbar';
 import WaveLayout from '../layouts/WaveLayout';
 import AuthModal from '../components/Auth/AuthModal';
-
+import Homework from './Homework';
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { isAuthenticated } = useAuth();
@@ -43,8 +43,11 @@ const Home = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
+
+      
     </div>
   );
 };
+
 
 export default Home;

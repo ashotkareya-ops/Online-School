@@ -66,6 +66,7 @@ const SetupProfileModal = ({ onSave }) => {
     formData.examType !== '' &&
     formData.selectedSubjects.length > 0;
 
+    
   return (
     <div className="modal-overlay">
       <div className="modal setup-modal">
