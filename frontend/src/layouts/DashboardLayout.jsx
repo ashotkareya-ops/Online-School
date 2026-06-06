@@ -277,6 +277,14 @@ const DashboardLayout = () => {
               <p><strong>Фамилия:</strong> {user.last_name || '—'}</p>
               <p><strong>Роль:</strong> {user.role === 'teacher' ? 'Учитель' : 'Ученик'}</p>
 
+              {/* ДОБАВЛЕНО: Отображение экзаменов и предметов для учителя */}
+              {user.role === 'teacher' && user.is_profile_filled && (
+                <div style={{ marginTop: '15px' }}>
+                  <p><strong>Преподаёт экзамены:</strong> {user.exam_type?.length > 0 ? user.exam_type.map(t => EXAM_LABELS[t] || t).join(', ') : '—'}</p>
+                  <p><strong>Предметы:</strong> {user.subjects ? Object.values(user.subjects).flat().join(', ') : '—'}</p>
+                </div>
+              )}
+
               {user.role === 'teacher' && user.is_approved && (
                 <div style={{
                   marginTop: '15px',
@@ -312,7 +320,8 @@ const DashboardLayout = () => {
               {user.role === 'student' && (
                 <div style={{ marginTop: '15px' }}>
                   <p><strong>Экзамен:</strong> {user.exam_type?.length > 0 ? user.exam_type.map(t => EXAM_LABELS[t] || t).join(', ') : '—'}</p>
-                  <p><strong>Предметы:</strong> {user.subjects?.length > 0 ? user.subjects.join(', ') : '—'}</p>
+                  {/* ИСПРАВЛЕНО: Извлекаем значения из объекта словаря */}
+                  <p><strong>Предметы:</strong> {user.subjects && Object.keys(user.subjects).length > 0 ? Object.values(user.subjects).flat().join(', ') : '—'}</p>
                   <p><strong>Статус профиля:</strong> {user.is_profile_filled ? '✅ Заполнен' : '⚠️ Требует настройки'}</p>
                 </div>
               )}
