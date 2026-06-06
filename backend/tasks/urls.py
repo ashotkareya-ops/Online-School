@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (TaskCreateAPIView, TaskGroupListAPIView, TaskGroupCreateAPIView,
-                    TaskListAPIView, SubjectListAPIView, AvailableSubjectsAPIView)
+                    TaskListAPIView, SubjectListAPIView, AvailableSubjectsAPIView, GenerateTrainerAPIView)
 
 urlpatterns = [
     path('',                   TaskCreateAPIView.as_view(),        name='task_create'),
@@ -9,4 +9,6 @@ urlpatterns = [
     path('groups/create/',     TaskGroupCreateAPIView.as_view(),    name='task_group_create'),
     path('subjects/',          SubjectListAPIView.as_view(),        name='subject_list'),
     path('subjects/available/',AvailableSubjectsAPIView.as_view(),  name='available_subjects'),
+    path('generate/', GenerateTrainerAPIView.as_view(), name='trainer_generate'), 
 ]
+

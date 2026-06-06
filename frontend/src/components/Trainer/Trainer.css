@@ -1,0 +1,807 @@
+/* ─── Trainer.css ─────────────────────────────────────────────────────────── */
+
+/* ══ ОБЁРТКА ══════════════════════════════════════════════════════════════════ */
+.tr-wrap {
+  width: 100%;
+  padding: 0 0 100px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #1a1a1a;
+}
+
+.tr-screen { padding-top: 4px; }
+
+/* ══ КНОПКА НАЗАД ══════════════════════════════════════════════════════════════ */
+.tr-back-btn {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 0;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color .15s;
+}
+.tr-back-btn:hover { color: #333; }
+
+/* ══ ЗАГОЛОВОК ЭКРАНА ══════════════════════════════════════════════════════════ */
+.tr-header { margin-bottom: 20px; }
+
+.tr-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #111;
+}
+.tr-subtitle {
+  font-size: 13px;
+  color: #999;
+  margin: 0;
+}
+
+/* ══ ВЫБОР ПРЕДМЕТА ════════════════════════════════════════════════════════════ */
+.tr-subjects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.tr-subject-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: #fff;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #111;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .1s;
+  text-align: left;
+}
+.tr-subject-btn:hover {
+  border-color: #111;
+  box-shadow: 0 4px 16px rgba(0,0,0,.07);
+  transform: translateY(-2px);
+}
+.tr-subject-btn__arrow { color: #bbb; font-size: 16px; transition: color .15s; }
+.tr-subject-btn:hover .tr-subject-btn__arrow { color: #111; }
+
+/* ══ АККОРДЕОН КАТЕГОРИЙ ═══════════════════════════════════════════════════════ */
+.tr-categories { display: flex; flex-direction: column; gap: 6px; }
+
+.tr-category {
+  border: 1.5px solid #e8e8e8;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color .15s, box-shadow .15s;
+}
+.tr-category.open {
+  border-color: #ccc;
+  box-shadow: 0 2px 12px rgba(0,0,0,.05);
+}
+
+.tr-category-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background .1s;
+}
+.tr-category-header:hover { background: #fafafa; }
+
+.tr-category-num {
+  min-width: 28px;
+  height: 28px;
+  background: #f0f0f0;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #555;
+  flex-shrink: 0;
+  transition: background .15s, color .15s;
+}
+.tr-category.open .tr-category-num { background: #111; color: #fff; }
+
+.tr-category-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111;
+  line-height: 1.3;
+}
+
+.tr-category-badge {
+  background: #e6f4ee;
+  color: #1a7a4a;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.tr-chevron {
+  color: #bbb;
+  font-size: 14px;
+  transition: transform .2s;
+  flex-shrink: 0;
+}
+.tr-chevron.open { transform: rotate(180deg); }
+
+.tr-category-body {
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+}
+
+/* ══ СТРОКА ПОДТИПА ════════════════════════════════════════════════════════════ */
+.tr-subtype-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background .1s;
+}
+.tr-subtype-row:last-child { border-bottom: none; }
+.tr-subtype-row.active { background: #f2fbf6; }
+
+.tr-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d0d0d0;
+  border-radius: 6px;
+  flex-shrink: 0;
+  cursor: pointer;
+  background: none;
+  padding: 0;
+  transition: border-color .15s, background .15s;
+  position: relative;
+}
+.tr-checkbox.checked {
+  background: #111;
+  border-color: #111;
+}
+.tr-checkbox.checked::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #fff;
+  line-height: 1;
+}
+
+.tr-subtype-name {
+  flex: 1;
+  font-size: 13.5px;
+  color: #444;
+  cursor: pointer;
+  line-height: 1.3;
+}
+.tr-subtype-row.active .tr-subtype-name { color: #111; font-weight: 500; }
+
+.tr-subtype-avail {
+  font-size: 12px;
+  color: #bbb;
+  min-width: 48px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ══ СЧЁТЧИК ═══════════════════════════════════════════════════════════════════ */
+.tr-counter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  transition: opacity .15s;
+}
+.tr-counter.disabled { opacity: 0.25; pointer-events: none; }
+
+.tr-counter-btn {
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 7px;
+  background: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: #333;
+  padding: 0;
+  transition: border-color .1s, background .1s;
+}
+.tr-counter-btn:hover:not(:disabled) { border-color: #111; background: #f5f5f5; }
+.tr-counter-btn:disabled { opacity: 0.3; cursor: default; }
+
+.tr-counter-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* ══ НИЖНЯЯ ПАНЕЛЬ ═════════════════════════════════════════════════════════════ */
+.tr-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #efefef;
+  flex-wrap: wrap;
+}
+.tr-footer--results { justify-content: space-between; }
+
+.tr-summary {
+  font-size: 13px;
+  color: #999;
+}
+
+.tr-generate-btn {
+  padding: 12px 26px;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, transform .1s, box-shadow .15s;
+  white-space: nowrap;
+}
+.tr-generate-btn:hover:not(:disabled) {
+  background: #333;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.15);
+}
+.tr-generate-btn:disabled { background: #ccc; cursor: default; }
+
+.tr-outline-btn {
+  padding: 12px 22px;
+  background: none;
+  color: #333;
+  border: 1.5px solid #d8d8d8;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+  white-space: nowrap;
+}
+.tr-outline-btn:hover { border-color: #111; color: #111; }
+
+/* ══ СОСТОЯНИЯ ═════════════════════════════════════════════════════════════════ */
+.tr-loading {
+  text-align: center;
+  padding: 48px;
+  color: #bbb;
+  font-size: 14px;
+}
+.tr-empty {
+  text-align: center;
+  padding: 56px 24px;
+  color: #bbb;
+}
+.tr-empty-icon { font-size: 36px; display: block; margin-bottom: 12px; }
+.tr-empty p { margin: 0; font-size: 14px; line-height: 1.5; }
+.tr-error { color: #e34; font-size: 13px; margin-top: 10px; }
+
+/* ══════════════════════════════════════════════════════════════════════════════ */
+/* ЭКРАН РЕШЕНИЯ                                                                 */
+/* ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Липкая шапка с прогрессом ─────────────────────────────────────────────── */
+.tr-solve-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(248, 248, 248, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid #efefef;
+  padding: 10px 0 0;
+  margin: 0 0 24px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.tr-solve-sticky-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+}
+
+.tr-solve-sticky-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.tr-solve-sticky-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.tr-solve-sticky-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+  white-space: nowrap;
+}
+
+.tr-solve-sticky-sub {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
+}
+
+/* Dots-навигация по заданиям */
+.tr-dots {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  max-width: 320px;
+}
+
+.tr-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  transition: background .2s, transform .15s;
+  flex-shrink: 0;
+}
+.tr-dot.answered { background: #111; }
+.tr-dot.current  { transform: scale(1.4); background: #555; }
+
+/* Прогресс-бар (тонкая полоса под шапкой) */
+.tr-progress-bar {
+  height: 3px;
+  background: #efefef;
+  margin: 0;
+}
+.tr-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #111 0%, #444 100%);
+  border-radius: 0 99px 99px 0;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── Список карточек ───────────────────────────────────────────────────────── */
+.tr-solve-list { display: flex; flex-direction: column; gap: 14px; }
+
+.tr-solve-card {
+  display: flex;
+  gap: 16px;
+  background: #fff;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 14px;
+  padding: 20px;
+  transition: border-color .15s, box-shadow .15s;
+  scroll-margin-top: 90px;
+}
+.tr-solve-card:focus-within {
+  border-color: #ccc;
+  box-shadow: 0 4px 20px rgba(0,0,0,.06);
+}
+
+.tr-solve-card__num {
+  width: 32px;
+  height: 32px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #555;
+  flex-shrink: 0;
+}
+
+.tr-solve-card__body { flex: 1; min-width: 0; }
+
+.tr-solve-card__meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.tr-solve-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: #f0f0f0;
+  color: #555;
+}
+.tr-solve-tag--diff { background: #fef3e2; color: #a06000; }
+
+.tr-solve-card__text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #1a1a1a;
+  margin: 0 0 14px;
+  white-space: pre-wrap;
+}
+
+.tr-solve-card__img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  border: 1px solid #e8e8e8;
+}
+
+.tr-solve-card__steps {
+  background: #f8f8f8;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tr-solve-step__text {
+  font-size: 13.5px;
+  color: #444;
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+.tr-solve-step__img {
+  max-width: 100%;
+  border-radius: 7px;
+  margin-top: 6px;
+}
+
+/* ── Поле ответа ───────────────────────────────────────────────────────────── */
+.tr-answer-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  background: #f8f8f8;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.tr-answer-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #999;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.tr-answer-input {
+  flex: 1;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 9px 13px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #111;
+  background: #fff;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  min-width: 0;
+}
+.tr-answer-input:focus {
+  border-color: #111;
+  box-shadow: 0 0 0 3px rgba(0,0,0,.06);
+}
+.tr-answer-input::placeholder { color: #ccc; font-weight: 400; }
+.tr-answer-input.filled { border-color: #1a7a4a; background: #f7fdf9; }
+
+/* ══════════════════════════════════════════════════════════════════════════════ */
+/* ЭКРАН РЕЗУЛЬТАТОВ                                                             */
+/* ══════════════════════════════════════════════════════════════════════════════ */
+
+.tr-result-summary {
+  background: #fff;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 16px;
+  padding: 28px 24px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+}
+
+/* Круговой индикатор */
+.tr-result-circle-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+.tr-result-circle-svg {
+  width: 120px;
+  height: 120px;
+  transform: rotate(-90deg);
+}
+.tr-result-circle-bg {
+  fill: none;
+  stroke: #f0f0f0;
+  stroke-width: 8;
+}
+.tr-result-circle-fg {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s cubic-bezier(.4,0,.2,1), stroke .5s;
+}
+.tr-result-circle-fg.excellent { stroke: #1a7a4a; }
+.tr-result-circle-fg.good      { stroke: #2563eb; }
+.tr-result-circle-fg.ok        { stroke: #d97706; }
+.tr-result-circle-fg.poor      { stroke: #dc2626; }
+
+.tr-result-circle-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+.tr-result-circle-pct {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+}
+.tr-result-circle-pct.excellent { color: #1a7a4a; }
+.tr-result-circle-pct.good      { color: #2563eb; }
+.tr-result-circle-pct.ok        { color: #d97706; }
+.tr-result-circle-pct.poor      { color: #dc2626; }
+.tr-result-circle-grade {
+  font-size: 11px;
+  font-weight: 600;
+  color: #999;
+}
+
+.tr-result-stats {
+  display: flex;
+  gap: 32px;
+}
+.tr-result-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.tr-result-stat__val {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+}
+.tr-result-stat__label {
+  font-size: 11px;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.tr-result-stat.correct .tr-result-stat__val { color: #1a7a4a; }
+.tr-result-stat.wrong   .tr-result-stat__val { color: #dc2626; }
+.tr-result-stat.total   .tr-result-stat__val { color: #333; }
+
+.tr-show-answers-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+}
+.tr-show-answers-toggle input { cursor: pointer; accent-color: #111; width: 15px; height: 15px; }
+
+/* ── Карточки результатов ──────────────────────────────────────────────────── */
+.tr-result-list { display: flex; flex-direction: column; gap: 8px; }
+
+.tr-result-card {
+  border: 1.5px solid #e8e8e8;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color .15s;
+}
+.tr-result-card.correct { border-color: #c8eeda; background: #f7fdf9; }
+.tr-result-card.wrong   { border-color: #f5c6c6; background: #fff8f8; }
+
+.tr-result-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tr-result-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.tr-result-icon.correct { background: #d1f0e0; color: #1a7a4a; }
+.tr-result-icon.wrong   { background: #fdd;    color: #dc2626; }
+
+.tr-result-card__info { flex: 1; min-width: 0; }
+.tr-result-card__num  { font-size: 13px; font-weight: 600; color: #333; display: block; }
+.tr-result-card__type { font-size: 11px; color: #bbb; }
+
+.tr-result-answers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.tr-result-user.correct { color: #1a7a4a; font-weight: 600; }
+.tr-result-user.wrong   { color: #dc2626; font-weight: 600; text-decoration: line-through; }
+.tr-result-correct      { color: #1a7a4a; font-size: 12px; font-weight: 500; }
+
+.tr-result-card__body {
+  padding: 12px 16px;
+  border-top: 1px solid rgba(0,0,0,.05);
+}
+.tr-result-task-text {
+  font-size: 13.5px;
+  color: #444;
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+/* ══ МОДАЛКА ═══════════════════════════════════════════════════════════════════ */
+.tr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.tr-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 24px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 24px 64px rgba(0,0,0,.18);
+}
+.tr-modal__title { font-size: 18px; font-weight: 700; margin: 0 0 10px; }
+.tr-modal__text  { font-size: 14px; color: #666; line-height: 1.6; margin: 0 0 20px; }
+.tr-modal__footer { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.tr-modal__cancel {
+  padding: 10px 18px;
+  background: none;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 9px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #666;
+}
+.tr-modal__confirm {
+  padding: 10px 18px;
+  background: #111;
+  border: none;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════ */
+/* АДАПТИВ: ПЛАНШЕТ / МОБИЛКА                                                   */
+/* ══════════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .tr-wrap {
+    padding: 0 12px 100px;
+  }
+
+  .tr-title { font-size: 20px; }
+
+  .tr-subjects-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Sticky шапка на мобилке — убираем dots, оставляем только прогресс */
+  .tr-dots { display: none; }
+
+  .tr-solve-sticky {
+    margin: 0 0 16px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .tr-progress-bar { margin: 0; }
+
+  .tr-solve-sticky-title { font-size: 13px; }
+  .tr-solve-sticky-sub   { font-size: 11px; }
+
+  /* Карточки решения */
+  .tr-solve-card {
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .tr-solve-card__num {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+
+  .tr-solve-card__text { font-size: 14px; }
+
+  /* Поле ответа — полная ширина */
+  .tr-answer-wrap { flex-wrap: wrap; gap: 8px; }
+  .tr-answer-input { max-width: 100%; font-size: 16px; /* предотвращает зум на iOS */ }
+
+  /* Нижняя панель */
+  .tr-footer { flex-direction: column; align-items: stretch; }
+  .tr-footer--results { flex-direction: column-reverse; }
+  .tr-generate-btn, .tr-outline-btn {
+    width: 100%;
+    text-align: center;
+    padding: 14px;
+  }
+  .tr-summary { text-align: center; }
+
+  /* Результаты */
+  .tr-result-stats { gap: 20px; }
+  .tr-result-stat__val { font-size: 22px; }
+
+  .tr-result-card__header { padding: 11px 12px; gap: 8px; }
+  .tr-result-answers { flex-direction: column; align-items: flex-end; gap: 2px; }
+
+  /* Подтипы */
+  .tr-subtype-row { flex-wrap: wrap; gap: 8px; }
+  .tr-subtype-avail { min-width: auto; }
+}
+
+@media (max-width: 400px) {
+  .tr-solve-sticky-info { display: none; }
+  .tr-result-circle-wrap { width: 100px; height: 100px; }
+  .tr-result-circle-svg  { width: 100px; height: 100px; }
+  .tr-result-circle-pct  { font-size: 22px; }
+}

@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 from .models import Task, TaskStep, TaskCategory, TaskSubtype, Subject, ExamType
-
+import random
 
 class SubjectListAPIView(APIView):
     """Список предметов пользователя по типу экзамена.
@@ -354,3 +354,45 @@ class TaskListAPIView(APIView):
 
     def _has_subject_access(self, user, subject):
         return user.subject_links.filter(id=subject.id).exists()
+    
+
+
+class GenerateTrainerAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        limits = request.data.get('limits', [])
+        if not limits:
+            return Response({"error": "Не указаны подтипы (limits)"}, status=status.HTTP_400_BAD_REQUEST)
+
+        result_tasks = []
+        for item in limits:
+            subtype_id = item.get('subtype_id')
+            count = int(item.get('count', 1))
+            if not subtype_id or count < 1:
+                continue
+            try:
+                subtype = TaskSubtype.objects.select_related('category__subject').get(id=subtype_id)
+            except TaskSubtype.DoesNotExist:
+                continue
+            subject = subtype.category.subject
+            if not request.user.subject_links.filter(id=subject.id).exists():
+                return Response({"error": f"Нет доступа к предмету '{subject.name}'"}, status=status.HTTP_403_FORBIDDEN)
+            qs = list(Task.objects.filter(subtype_id=subtype_id).prefetch_related('steps'))
+            chosen = random.sample(qs, min(count, len(qs)))
+            for task in chosen:
+                result_tasks.append({
+                    "id": task.id,
+                    "subtype_name": subtype.name,
+                    "text": task.text,
+                    "taskImage": task.task_image_url,
+                    "answer": task.answer,
+                    "diff": task.diff,
+                    "year": task.year,
+                    "steps": [{"text": s.text, "image": s.image_url} for s in task.steps.all()],
+                })
+
+        random.shuffle(result_tasks)
+        if not result_tasks:
+            return Response({"error": "В банке нет заданий по выбранным темам"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"tasks": result_tasks})

@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import SetupProfileModal from '../components/SetupProfileModal/SetupProfileModal';
 import TaskBank from '../components/TaskBank/TaskBank';
+import Trainer from '../components/Trainer/Trainer';
 import './DashboardLayout.css';
 import Schedule from '../components/Schedule/Schedule';
 
@@ -81,13 +82,7 @@ const DashboardLayout = () => {
     { id: 4, title: 'Тригонометрия: синусы', subject: 'Математика', status: 'todo' },
   ]);
 
-  // Демонстрационные данные для наполнения раздела Тренажер
-  const [trainingTopics] = useState([
-    { id: 1, title: 'Тренажер: Квадратные уравнения', subject: 'Математика', count: '25 заданий' },
-    { id: 2, title: 'Тренажер: Арифметическая прогрессия', subject: 'Математика', count: '15 заданий' },
-    { id: 3, title: 'Тренажер: Синтаксис и циклы JavaScript', subject: 'Программирование', count: '30 заданий' },
-    { id: 4, title: 'Тренажер: Методы массивов (map, filter)', subject: 'Программирование', count: '20 заданий' },
-  ]);
+  // Демонстрационные данные больше не нужны — тренажёр использует реальные данные
 
   const handleLogout = () => {
     logout();
@@ -136,54 +131,8 @@ const DashboardLayout = () => {
           </div>
         );
 
-      case 'training': {
-        const subjects = ['Все', 'Математика', 'Программирование'];
-        const filteredTopics = activeSubject === 'Все'
-          ? trainingTopics
-          : trainingTopics.filter(topic => topic.subject === activeSubject);
-
-        return (
-          <div className="main-container">
-            <div className="content-header">
-              <h2>Интерактивный тренажер</h2>
-            </div>
-            
-            <div className="tabs-header">
-              {subjects.map(subject => (
-                <button
-                  key={subject}
-                  className={`tab-button ${activeSubject === subject ? 'active' : ''}`}
-                  onClick={() => setActiveSubject(subject)}
-                >
-                  {subject}
-                </button>
-              ))}
-            </div>
-
-            <div className="tasks-grid">
-              {filteredTopics.length > 0 ? (
-                filteredTopics.map(topic => (
-                  <div key={topic.id} className="task-card">
-                    <div className="task-info">
-                      <span className="subject-tag">{topic.subject}</span>
-                      <span className="deadline">{topic.count}</span>
-                    </div>
-                    <h3>{topic.title}</h3>
-                    <button 
-                      className="btn-start" 
-                      onClick={() => alert(`Запуск тренажера: ${topic.title}`)}
-                    >
-                      Начать тренировку
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <div className="empty-errors">Темы для выбранного предмета отсутствуют</div>
-              )}
-            </div>
-          </div>
-        );
-      }
+      case 'training':
+        return <Trainer user={user} />;
 
       case 'homework-list': {
         const subjects = ['Все', 'Математика', 'Программирование'];
