@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import SetupProfileModal from '../components/SetupProfileModal/SetupProfileModal';
 import TaskBank from '../components/TaskBank/TaskBank';
 import Trainer from '../components/Trainer/Trainer';
+import Homework from '../pages/Homework';
 import './DashboardLayout.css';
 import Schedule from '../components/Schedule/Schedule';
 
@@ -49,7 +50,6 @@ const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('home');
-  const [activeSubject, setActiveSubject] = useState('Все');
   const [showSetup, setShowSetup] = useState(false);
 
   const isPendingTeacher = user?.role === 'teacher' && !user?.is_approved;
@@ -75,14 +75,17 @@ const DashboardLayout = () => {
     { id: 108, code: 'ДЗ №3', title: 'Циклы While/For', subject: 'Программирование' },
   ]);
 
+  // Тестовые данные — замени на fetch с бэкенда
+  // Статусы: 'todo' | 'review' | 'checked'
+  // autoCheck: true  — проверяется автоматически (тест/ввод ответа)
+  // autoCheck: false — проверяет учитель вручную
   const [homeworks] = useState([
-    { id: 1, title: 'Реакция на события в JS', subject: 'Программирование', status: 'todo' },
-    { id: 2, title: 'Квадратные уравнения', subject: 'Математика', status: 'review' },
-    { id: 3, title: 'Работа с API', subject: 'Программирование', status: 'review' },
-    { id: 4, title: 'Тригонометрия: синусы', subject: 'Математика', status: 'todo' },
+    { id: 1, title: 'Реакция на события в JS',  subject: 'Программирование', status: 'todo',    deadline: '10 июня', autoCheck: false },
+    { id: 2, title: 'Квадратные уравнения',      subject: 'Математика',       status: 'review',  deadline: '8 июня',  autoCheck: false },
+    { id: 3, title: 'Работа с API',              subject: 'Программирование', status: 'checked', deadline: '9 июня',  autoCheck: true  },
+    { id: 4, title: 'Тригонометрия: синусы',     subject: 'Математика',       status: 'todo',    deadline: '12 июня', autoCheck: false },
+    { id: 5, title: 'Тест: типы данных',         subject: 'Программирование', status: 'checked', deadline: '7 июня',  autoCheck: true  },
   ]);
-
-  // Демонстрационные данные больше не нужны — тренажёр использует реальные данные
 
   const handleLogout = () => {
     logout();
@@ -100,20 +103,18 @@ const DashboardLayout = () => {
 
   const handleTabClick = (tab) => {
     if (isPendingTeacher && tab !== 'home' && tab !== 'profile') return;
-    // Сбрасываем фильтр по предметам на "Все" при переключении вкладок для корректного отображения
-    setActiveSubject('Все');
     setActiveTab(tab);
   };
 
   if (!user) return <div className="loading">Загрузка...</div>;
 
   const navItems = [
-    { key: 'home', label: 'Главная' },
-    { key: 'training', label:  'Тренажер' },
-    { key: 'homework-list', label: 'Домашняя работа' },
+    { key: 'home',            label: 'Главная' },
+    { key: 'training',        label: 'Тренажер' },
+    { key: 'homework-list',   label: 'Домашняя работа' },
     { key: 'homework-status', label: user.role === 'teacher' ? 'Банк заданий' : 'Мои ошибки' },
-    { key: 'schedule', label: 'Расписание' },
-    { key: 'profile', label: 'Профиль' },
+    { key: 'schedule',        label: 'Расписание' },
+    { key: 'profile',         label: 'Профиль' },
   ];
 
   const renderContent = () => {
@@ -134,54 +135,8 @@ const DashboardLayout = () => {
       case 'training':
         return <Trainer user={user} />;
 
-      case 'homework-list': {
-        const subjects = ['Все', 'Математика', 'Программирование'];
-        const filteredBySubject = activeSubject === 'Все'
-          ? homeworks
-          : homeworks.filter(h => h.subject === activeSubject);
-        const todoTasks = filteredBySubject.filter(h => h.status === 'todo');
-        const reviewTasks = filteredBySubject.filter(h => h.status === 'review');
-
-        return (
-          <div className="main-container">
-            <div className="stats-container">
-              <div className="stat-card todo-border">
-                <span className="stat-label">Нужно сделать</span>
-                <span className="stat-value">{todoTasks.length}</span>
-              </div>
-              <div className="stat-card review-border">
-                <span className="stat-label">На проверке</span>
-                <span className="stat-value">{reviewTasks.length}</span>
-              </div>
-            </div>
-            <div className="tabs-header">
-              {subjects.map(subject => (
-                <button
-                  key={subject}
-                  className={`tab-button ${activeSubject === subject ? 'active' : ''}`}
-                  onClick={() => setActiveSubject(subject)}
-                >
-                  {subject}
-                </button>
-              ))}
-            </div>
-            <div className="homework-grid">
-              <div className="homework-column">
-                <h3 className="column-title">Не сделанные</h3>
-                {todoTasks.map(hw => (
-                  <div key={hw.id} className="hw-item-card">{hw.title}</div>
-                ))}
-              </div>
-              <div className="homework-column">
-                <h3 className="column-title">Отправленные</h3>
-                {reviewTasks.map(hw => (
-                  <div key={hw.id} className="hw-item-card">{hw.title}</div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-      }
+      case 'homework-list':
+        return <Homework user={user} homeworkData={homeworks} />;
 
       case 'schedule':
         return <Schedule />;
@@ -226,7 +181,6 @@ const DashboardLayout = () => {
               <p><strong>Фамилия:</strong> {user.last_name || '—'}</p>
               <p><strong>Роль:</strong> {user.role === 'teacher' ? 'Учитель' : 'Ученик'}</p>
 
-              {/* ДОБАВЛЕНО: Отображение экзаменов и предметов для учителя */}
               {user.role === 'teacher' && user.is_profile_filled && (
                 <div style={{ marginTop: '15px' }}>
                   <p><strong>Преподаёт экзамены:</strong> {user.exam_type?.length > 0 ? user.exam_type.map(t => EXAM_LABELS[t] || t).join(', ') : '—'}</p>
@@ -236,11 +190,8 @@ const DashboardLayout = () => {
 
               {user.role === 'teacher' && user.is_approved && (
                 <div style={{
-                  marginTop: '15px',
-                  padding: '15px',
-                  background: 'rgba(0,208,132,0.1)',
-                  borderRadius: '12px',
-                  border: '2px solid #00d084',
+                  marginTop: '15px', padding: '15px',
+                  background: 'rgba(0,208,132,0.1)', borderRadius: '12px', border: '2px solid #00d084',
                 }}>
                   <p style={{ marginBottom: '5px' }}><strong>Ваш код для учеников:</strong></p>
                   <span style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '3px', color: '#00d084' }}>
@@ -254,13 +205,9 @@ const DashboardLayout = () => {
 
               {user.role === 'teacher' && !user.is_approved && (
                 <div style={{
-                  marginTop: '15px',
-                  padding: '14px 16px',
-                  background: 'rgba(255,193,7,0.1)',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255,193,7,0.4)',
-                  fontSize: '14px',
-                  color: '#92600a',
+                  marginTop: '15px', padding: '14px 16px',
+                  background: 'rgba(255,193,7,0.1)', borderRadius: '12px',
+                  border: '1px solid rgba(255,193,7,0.4)', fontSize: '14px', color: '#92600a',
                 }}>
                   ⏳ Аккаунт ожидает подтверждения администратором
                 </div>
@@ -269,7 +216,6 @@ const DashboardLayout = () => {
               {user.role === 'student' && (
                 <div style={{ marginTop: '15px' }}>
                   <p><strong>Экзамен:</strong> {user.exam_type?.length > 0 ? user.exam_type.map(t => EXAM_LABELS[t] || t).join(', ') : '—'}</p>
-                  {/* ИСПРАВЛЕНО: Извлекаем значения из объекта словаря */}
                   <p><strong>Предметы:</strong> {user.subjects && Object.keys(user.subjects).length > 0 ? Object.values(user.subjects).flat().join(', ') : '—'}</p>
                   <p><strong>Статус профиля:</strong> {user.is_profile_filled ? '✅ Заполнен' : '⚠️ Требует настройки'}</p>
                 </div>
@@ -285,9 +231,7 @@ const DashboardLayout = () => {
 
   return (
     <div className="dashboard-wrapper">
-      {showSetup && (
-        <SetupProfileModal onSave={handleSaveProfile} />
-      )}
+      {showSetup && <SetupProfileModal onSave={handleSaveProfile} />}
 
       <aside className="sidebar">
         <div className="sidebar-logo">Твой репетитор</div>
@@ -301,12 +245,8 @@ const DashboardLayout = () => {
                   className={activeTab === key ? 'active' : ''}
                   onClick={() => handleTabClick(key)}
                   style={isLocked ? {
-                    opacity: 0.4,
-                    cursor: 'not-allowed',
-                    userSelect: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
+                    opacity: 0.4, cursor: 'not-allowed', userSelect: 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   } : {}}
                   title={isLocked ? 'Доступно после подтверждения аккаунта' : ''}
                 >
@@ -329,13 +269,9 @@ const DashboardLayout = () => {
             </span>
             {isPendingTeacher && (
               <span style={{
-                background: 'rgba(255,193,7,0.2)',
-                color: '#92600a',
-                fontSize: '12px',
-                fontWeight: '600',
-                padding: '4px 12px',
-                borderRadius: '20px',
-                border: '1px solid rgba(255,193,7,0.4)',
+                background: 'rgba(255,193,7,0.2)', color: '#92600a',
+                fontSize: '12px', fontWeight: '600', padding: '4px 12px',
+                borderRadius: '20px', border: '1px solid rgba(255,193,7,0.4)',
               }}>
                 ⏳ На проверке
               </span>
