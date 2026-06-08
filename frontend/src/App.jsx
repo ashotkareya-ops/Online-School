@@ -1,6 +1,6 @@
 // src/App.jsx
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Home from './pages/Home';
+import Home from './layouts/Home';
 import DashboardLayout from './layouts/DashboardLayout';
 import { useAuth } from './context/AuthContext';
 import './App.css';

@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import SetupProfileModal from '../components/SetupProfileModal/SetupProfileModal';
 import TaskBank from '../components/TaskBank/TaskBank';
 import Trainer from '../components/Trainer/Trainer';
-import Homework from '../pages/Homework';
+import Homework from '../Homework/Homework';
 import './DashboardLayout.css';
 import Schedule from '../components/Schedule/Schedule';
+import TeacherHomework from '../Homework/TeacherHomework';
 
 const EXAM_LABELS = { oge: 'ОГЭ', ege: 'ЕГЭ' };
 
@@ -75,16 +76,19 @@ const DashboardLayout = () => {
     { id: 108, code: 'ДЗ №3', title: 'Циклы While/For', subject: 'Программирование' },
   ]);
 
-  // Тестовые данные — замени на fetch с бэкенда
-  // Статусы: 'todo' | 'review' | 'checked'
-  // autoCheck: true  — проверяется автоматически (тест/ввод ответа)
-  // autoCheck: false — проверяет учитель вручную
   const [homeworks] = useState([
     { id: 1, title: 'Реакция на события в JS',  subject: 'Программирование', status: 'todo',    deadline: '10 июня', autoCheck: false },
     { id: 2, title: 'Квадратные уравнения',      subject: 'Математика',       status: 'review',  deadline: '8 июня',  autoCheck: false },
     { id: 3, title: 'Работа с API',              subject: 'Программирование', status: 'checked', deadline: '9 июня',  autoCheck: true  },
     { id: 4, title: 'Тригонометрия: синусы',     subject: 'Математика',       status: 'todo',    deadline: '12 июня', autoCheck: false },
     { id: 5, title: 'Тест: типы данных',         subject: 'Программирование', status: 'checked', deadline: '7 июня',  autoCheck: true  },
+  ]);
+
+  // Данные для Пробников
+  const [mockExams] = useState([
+    { id: 1, title: 'Вариант №1 (Май)', subject: 'Математика (профиль)', type: 'ЕГЭ', status: 'todo', deadline: '15 июня', autoCheck: true, score: null },
+    { id: 2, title: 'Вариант №4 (Итоговый)', subject: 'Информатика', type: 'ЕГЭ', status: 'review', deadline: '5 июня', autoCheck: false, score: null },
+    { id: 3, title: 'Демоверсия 2026', subject: 'Биология', type: 'ОГЭ', status: 'checked', deadline: '1 июня', autoCheck: true, score: '84/100' },
   ]);
 
   const handleLogout = () => {
@@ -106,12 +110,19 @@ const DashboardLayout = () => {
     setActiveTab(tab);
   };
 
+  const handleStartExam = (id) => {
+    alert(`Начало прохождения пробника №${id}.`);
+  };
+
   if (!user) return <div className="loading">Загрузка...</div>;
 
+  // Динамически формируем меню в зависимости от роли пользователя
   const navItems = [
     { key: 'home',            label: 'Главная' },
-    { key: 'training',        label: 'Тренажер' },
+    // Показываем Тренажер ТОЛЬКО если пользователь — ученик (student)
+    ...(user.role === 'student' ? [{ key: 'training', label: 'Тренажер' }] : []),
     { key: 'homework-list',   label: 'Домашняя работа' },
+    { key: 'mock-exams',      label: 'Пробники' },
     { key: 'homework-status', label: user.role === 'teacher' ? 'Банк заданий' : 'Мои ошибки' },
     { key: 'schedule',        label: 'Расписание' },
     { key: 'profile',         label: 'Профиль' },
@@ -133,18 +144,102 @@ const DashboardLayout = () => {
         );
 
       case 'training':
+        // Дополнительная защита, если вкладка вызвана напрямую
+        if (user.role !== 'student') return <h2>Раздел недоступен для преподавателей</h2>;
         return <Trainer user={user} />;
 
       case 'homework-list':
+                if (user.role === 'teacher') {
+          return <TeacherHomework user={user} />;
+          // Для реального приложения передайте список учеников:
+          // return <TeacherHomework user={user} studentsData={students} />;
+        }
+
         return <Homework user={user} homeworkData={homeworks} />;
 
       case 'schedule':
         return <Schedule />;
 
+      case 'mock-exams':
+        return (
+          <div className="main-container">
+            <div className="mock-exams-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <div>
+                <h2>Пробные варианты экзаменов</h2>
+                <p style={{ color: '#666', fontSize: '14px', margin: '4px 0 0' }}>
+                  {user.role === 'teacher' 
+                    ? 'Составляйте структуры КИМ, назначайте учащимся и отслеживайте результаты.' 
+                    : 'Решайте полноценные экзаменационные варианты с таймером и проверкой.'}
+                </p>
+              </div>
+              {user.role === 'teacher' && (
+                <button className="btn-create-exam" onClick={() => alert('Создание варианта...')}>
+                  ＋ Сформировать вариант
+                </button>
+              )}
+            </div>
+
+            <div className="exams-grid">
+              {mockExams.map(exam => (
+                <div key={exam.id} className="exam-card">
+                  <div className="exam-card-top">
+                    <span className="exam-type-badge">{exam.type}</span>
+                    <span className={`exam-status-badge ${exam.status}`}>
+                      {exam.status === 'todo' && 'Не начат'}
+                      {exam.status === 'review' && 'На проверке'}
+                      {exam.status === 'checked' && 'Проверен'}
+                    </span>
+                  </div>
+                  
+                  <h3>{exam.title}</h3>
+                  <p className="exam-subject">{exam.subject}</p>
+                  
+                  <div className="exam-meta-info">
+                    <span className="exam-deadline">⏳ До: {exam.deadline}</span>
+                    <span className="exam-check-type">
+                      {exam.autoCheck ? '🤖 Автопроверка' : '👤 Проверка учителем'}
+                    </span>
+                  </div>
+
+                  <div className="exam-card-actions" style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #f0f0f0' }}>
+                    {user.role === 'student' ? (
+                      <>
+                        {exam.status === 'todo' && (
+                          <button className="btn-exam-action start" onClick={() => handleStartExam(exam.id)}>Начать тест</button>
+                        )}
+                        {exam.status === 'review' && (
+                          <button className="btn-exam-action review" disabled>Ожидает проверки</button>
+                        )}
+                        {exam.status === 'checked' && (
+                          <div className="exam-result-score">
+                            <span>Результат:</span> <strong>{exam.score}</strong>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="teacher-exam-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <span style={{ fontSize: '13px', color: '#666' }}>
+                          {exam.status === 'todo' && 'Ученики еще решают'}
+                          {exam.status === 'review' && '⚠️ Требует проверки'}
+                          {exam.status === 'checked' && `Готово: ${exam.score}`}
+                        </span>
+                        <button className="btn-exam-action view-stats">
+                          {exam.status === 'review' ? 'Проверить' : 'Результаты'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
       case 'homework-status':
         if (user.role === 'teacher') {
           return <TaskBank user={user} />;
         }
+        // ПОЛНОСТЬЮ ВОССТАНОВЛЕННЫЙ КОД ОШИБОК ДЛЯ УЧЕНИКА
         return (
           <div className="main-container">
             <div className="error-header">
@@ -172,6 +267,7 @@ const DashboardLayout = () => {
         );
 
       case 'profile':
+        // ПОЛНОСТЬЮ ВОССТАНОВЛЕННЫЙ КОД ПРОФИЛЯ С УСЛОВИЯМИ РОЛЕЙ
         return (
           <div className="profile-section">
             <h2>Мой профиль</h2>
