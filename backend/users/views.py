@@ -148,3 +148,61 @@ def register(request):
         response_data['pending_approval'] = True
 
     return Response(response_data, status=201)
+
+
+
+# ── GET /api/teacher/students/ ───────────────────────────────────────────────
+# Возвращает список учеников текущего учителя
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def teacher_students(request):
+    if request.user.role != 'teacher':
+        return Response({'detail': 'Только для учителей.'}, status=status.HTTP_403_FORBIDDEN)
+
+    students = request.user.students.filter(role='student').order_by('last_name', 'first_name')
+    data = UserSerializer(students, many=True).data
+    return Response(data)
+
+
+# ── GET /api/teacher/homeworks/ ──────────────────────────────────────────────
+# Возвращает все домашние задания учеников текущего учителя
+# Формат: [{id, title, subject, status, deadline, auto_check, grade, student_id}]
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def teacher_homeworks(request):
+    if request.user.role != 'teacher':
+        return Response({'detail': 'Только для учителей.'}, status=status.HTTP_403_FORBIDDEN)
+
+    # Получаем id всех учеников этого учителя
+    student_ids = request.user.students.filter(role='student').values_list('id', flat=True)
+
+    # Импортируем модель домашних заданий
+    # Замените 'tasks.Homework' на реальный путь к вашей модели
+    try:
+        from tasks.models import Homework  # ← поправьте импорт под свою структуру
+    except ImportError:
+        return Response(
+            {'detail': 'Модель Homework не найдена. Поправьте импорт в teacher_views.py'},
+            status=status.HTTP_501_NOT_IMPLEMENTED
+        )
+
+    homeworks = Homework.objects.filter(
+        student_id__in=student_ids
+    ).select_related('subject').order_by('-created_at')
+
+    data = [
+        {
+            'id':         hw.id,
+            'title':      hw.title,
+            # subject — строка с названием (ForeignKey или CharField)
+            'subject':    hw.subject.name if hasattr(hw.subject, 'name') else str(hw.subject),
+            'status':     hw.status,       # 'todo' | 'review' | 'checked'
+            'deadline':   hw.deadline.isoformat() if hw.deadline else None,
+            'auto_check': hw.auto_check if hasattr(hw, 'auto_check') else False,
+            'grade':      hw.grade if hasattr(hw, 'grade') else None,
+            'student_id': hw.student_id,
+        }
+        for hw in homeworks
+    ]
+
+    return Response(data)
