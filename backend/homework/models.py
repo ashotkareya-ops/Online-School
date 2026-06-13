@@ -26,6 +26,7 @@ class Homework(models.Model):
     )
     due_date   = models.DateField(null=True, blank=True)
     status     = models.CharField(max_length=20, choices=STATUS_CHOICES, default='todo')
+    auto_check = models.BooleanField(default=False)    # True — система проверяет, False — учитель
     comment    = models.TextField(blank=True)          # комментарий учителя
     created_at = models.DateTimeField(auto_now_add=True)
 

@@ -313,53 +313,165 @@ const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
 };
 
 // ─── Модалка задать ДЗ ────────────────────────────────────────────────────────
-const AssignModal = ({ cart, onClose, onAssign }) => {
-  const MOCK_STUDENTS = [
-    { id: 1, name: 'Иван Иванов' },
-    { id: 2, name: 'Анна Смирнова' },
-    { id: 3, name: 'Петр Петров' },
-  ];
+const AssignModal = ({ cart, examType, subject, onClose, onAssign, onCartToggle }) => {
+  const [students, setStudents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [deadline, setDeadline] = useState('');
-  const isAllSelected = selectedStudents.length === MOCK_STUDENTS.length;
+  const [autoCheck, setAutoCheck] = useState(false);
 
-  const toggleAll = () => setSelectedStudents(isAllSelected ? [] : MOCK_STUDENTS.map(s => s.id));
+  useEffect(() => {
+  const fetchFilteredStudents = async () => {
+    setIsLoading(true);
+    try {
+      // Гарантируем, что тип экзамена пойдет маленькими буквами ('ege' / 'oge')
+      const examParam = examType ? String(examType).toLowerCase() : '';
+      const subjectParam = subject ? String(subject).trim() : '';
+
+      const res = await authFetch(
+        `${API_URL}/api/teacher/students/?exam_type=${examParam}&subject=${encodeURIComponent(subjectParam)}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setStudents(data);
+      }
+    } catch (err) {
+      console.error('Ошибка при загрузке студентов учителя:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  fetchFilteredStudents();
+}, [examType, subject]);
+
+  const isAllSelected = students.length > 0 && selectedStudents.length === students.length;
+
+  const toggleAll = () => setSelectedStudents(isAllSelected ? [] : students.map(s => s.id));
   const toggleStudent = (id) => setSelectedStudents(prev =>
     prev.includes(id) ? prev.filter(sid => sid !== id) : [...prev, id]
   );
 
+  const getStudentName = (student) => {
+    if (student.first_name || student.last_name) {
+      return `${student.last_name || ''} ${student.first_name || ''}`.trim();
+    }
+    return student.username;
+  };
+
   return (
     <div className="tl-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="tl-modal">
+
+        {/* Шапка */}
         <div className="tl-modal__header">
           <h3 className="tl-modal__title">Задать домашнее задание</h3>
           <button className="tl-modal__close" onClick={onClose}>✕</button>
         </div>
-        <div className="tl-modal__field">
-          <p style={{ fontSize: 14, color: '#555', margin: 0, fontWeight: 600 }}>
-            Выбрано заданий: <strong style={{ color: '#00a86b' }}>{cart.length}</strong>
-          </p>
+
+        {/* ── Выбранные задания: чипы ── */}
+        <div className="tl-assign-tasks-block">
+          <div className="tl-assign-tasks-block__header">
+            <span className="tl-assign-tasks-block__title">
+              Выбранные задания
+              <span className="tl-assign-tasks-block__badge">{cart.length}</span>
+            </span>
+            <span className="tl-assign-tasks-block__filter">
+              {examType === 'oge' ? 'ОГЭ' : 'ЕГЭ'} · {subject}
+            </span>
+          </div>
+          <div className="tl-task-chips">
+            {cart.map((task, idx) => {
+              const label = task.text
+                ? (task.text.length > 32 ? task.text.slice(0, 32) + '…' : task.text)
+                : '🖼 Картинка';
+              return (
+                <button
+                  key={task.id}
+                  type="button"
+                  className="tl-task-chip"
+                  onClick={() => onCartToggle(task)}
+                  title="Нажмите, чтобы убрать из ДЗ"
+                >
+                  <span className="tl-task-chip__num">{idx + 1}</span>
+                  <span className="tl-task-chip__label">{label}</span>
+                  <span className="tl-task-chip__remove">✕</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        {/* ── Кому назначить ── */}
         <div className="tl-modal__field">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <label className="tl-modal__label">Кому назначить? *</label>
-            <label className="tl-student-select-all">
-              <input type="checkbox" checked={isAllSelected} onChange={toggleAll} />
-              <span>Выбрать всех</span>
-            </label>
+            {students.length > 0 && (
+              <label className="tl-student-select-all">
+                <input type="checkbox" checked={isAllSelected} onChange={toggleAll} />
+                <span>Выбрать всех</span>
+              </label>
+            )}
           </div>
           <div className="tl-students-list">
-            {MOCK_STUDENTS.map(student => (
-              <label key={student.id} className="tl-student-item">
-                <input type="checkbox" className="tl-student-checkbox"
-                  checked={selectedStudents.includes(student.id)}
-                  onChange={() => toggleStudent(student.id)} />
-                <div className="tl-student-avatar">{student.name.charAt(0)}</div>
-                <span className="tl-student-name">{student.name}</span>
-              </label>
-            ))}
+            {isLoading ? (
+              <p style={{ fontSize: 14, color: '#666', textAlign: 'center', padding: '10px' }}>
+                Загрузка списка учеников...
+              </p>
+            ) : students.length === 0 ? (
+              <p style={{ fontSize: 14, color: '#999', textAlign: 'center', padding: '10px' }}>
+                У вас нет учеников, сдающих {examType === 'oge' ? 'ОГЭ' : 'ЕГЭ'} по предмету «{subject}».
+              </p>
+            ) : (
+              students.map(student => {
+                const fullName = getStudentName(student);
+                return (
+                  <label key={student.id} className="tl-student-item">
+                    <input type="checkbox" className="tl-student-checkbox"
+                      checked={selectedStudents.includes(student.id)}
+                      onChange={() => toggleStudent(student.id)} />
+                    <div className="tl-student-avatar">
+                      {fullName.charAt(0).toUpperCase() || '?'}
+                    </div>
+                    <span className="tl-student-name">{fullName}</span>
+                  </label>
+                );
+              })
+            )}
           </div>
         </div>
+
+        {/* ── Автопроверка — под списком учеников ── */}
+        <div className="tl-autocheck">
+          <div className="tl-autocheck__row">
+            <div className="tl-autocheck__info">
+              <span className="tl-autocheck__label">Автопроверка</span>
+              <span className="tl-autocheck__desc">
+                {autoCheck
+                  ? 'Система сверит ответ с эталоном автоматически'
+                  : 'Вы проверяете и выставляете оценку вручную'}
+              </span>
+            </div>
+            <button
+              type="button"
+              className={`tl-autocheck__toggle ${autoCheck ? 'on' : 'off'}`}
+              onClick={() => setAutoCheck(v => !v)}
+              aria-label="Переключить автопроверку"
+            >
+              <span className="tl-autocheck__thumb" />
+            </button>
+          </div>
+          <div className={`tl-autocheck__mode ${autoCheck ? 'auto' : 'manual'}`}>
+            <span className="tl-autocheck__mode-icon">{autoCheck ? '⚡' : '👨‍🏫'}</span>
+            <span>
+              {autoCheck
+                ? 'Ученик сразу увидит результат после отправки'
+                : 'Ученик увидит результат после вашей проверки'}
+            </span>
+          </div>
+        </div>
+
+        {/* ── Срок сдачи ── */}
         <div className="tl-modal__field">
           <label className="tl-modal__label">Срок сдачи (необязательно)</label>
           <input type="date" className="tl-modal__textarea tl-modal__textarea--sm"
@@ -367,12 +479,18 @@ const AssignModal = ({ cart, onClose, onAssign }) => {
             onChange={e => setDeadline(e.target.value)}
             min={new Date().toISOString().split('T')[0]} />
         </div>
+
         <div className="tl-modal__footer">
           <button className="tl-modal__cancel" onClick={onClose}>Отмена</button>
-          <button className="tl-modal__save" onClick={() => {
-            if (!selectedStudents.length) { alert('Выберите хотя бы одного ученика'); return; }
-            onAssign({ students: selectedStudents, deadline });
-          }}>Задать ученикам →</button>
+          <button className="tl-modal__save"
+            disabled={isLoading || !selectedStudents.length || cart.length === 0}
+            onClick={() => {
+              if (!selectedStudents.length) { alert('Выберите хотя бы одного ученика'); return; }
+              onAssign({ students: selectedStudents, deadline, auto_check: autoCheck });
+            }}
+          >
+            Задать ученикам →
+          </button>
         </div>
       </div>
     </div>
@@ -535,8 +653,14 @@ const TaskList = ({ examType, subject, subjectId, groupName, subtype, onBack, ca
         <AddTaskModal subtypeName={subtype?.name} onClose={() => setShowModal(false)} onSave={handleSave} />
       )}
       {showAssign && (
-        <AssignModal cart={cart} onClose={() => setShowAssign(false)}
-          onAssign={(data) => { setShowAssign(false); onAssign(data); }} />
+        <AssignModal 
+          cart={cart} 
+          examType={examType} 
+          subject={subject} 
+          onCartToggle={onCartToggle} // <- Добавили этот пропс[cite: 1]
+          onClose={() => setShowAssign(false)}
+          onAssign={(data) => { setShowAssign(false); onAssign(data); }} 
+        />
       )}
     </>
   );

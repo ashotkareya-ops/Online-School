@@ -9,7 +9,8 @@ from django.core.exceptions import ValidationError
 from .serializers import UserSerializer, SetupProfileSerializer
 from .models import User
 import re
-
+from django.db import models  # <- Добавьте этот импорт, чтобы исправить ошибку "models" не определено
+from django.db.models import Q
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
@@ -150,19 +151,37 @@ def register(request):
     return Response(response_data, status=201)
 
 
-
-# ── GET /api/teacher/students/ ───────────────────────────────────────────────
-# Возвращает список учеников текущего учителя
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def teacher_students(request):
     if request.user.role != 'teacher':
         return Response({'detail': 'Только для учителей.'}, status=status.HTTP_403_FORBIDDEN)
 
-    students = request.user.students.filter(role='student').order_by('last_name', 'first_name')
+    from tasks.models import Subject, ExamType
+
+    exam_type_param = request.query_params.get('exam_type', '').strip().lower()
+    subject_param   = request.query_params.get('subject', '').strip()
+
+    students = request.user.students.filter(role='student')
+
+    if exam_type_param:
+        exam_name = 'ОГЭ' if exam_type_param == 'oge' else 'ЕГЭ'
+
+        # Фильтруем через subject_links → exam_type, так же как SubjectListAPIView
+        students = students.filter(
+            subject_links__exam_type__name=exam_name
+        )
+
+        if subject_param:
+            students = students.filter(
+                subject_links__name=subject_param,
+                subject_links__exam_type__name=exam_name
+            )
+
+    students = students.distinct().order_by('last_name', 'first_name')
+
     data = UserSerializer(students, many=True).data
     return Response(data)
-
 
 # ── GET /api/teacher/homeworks/ ──────────────────────────────────────────────
 # Возвращает все домашние задания учеников текущего учителя
@@ -206,3 +225,4 @@ def teacher_homeworks(request):
     ]
 
     return Response(data)
+

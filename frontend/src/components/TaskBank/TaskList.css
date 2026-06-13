@@ -529,3 +529,289 @@
   align-items: center;
   justify-content: center;
 }
+
+
+/* ── Блок выбранных заданий в модалке ДЗ ───── */
+.tl-assign-tasks-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f6faf8;
+  border: 1.5px solid #c8ead9;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.tl-assign-tasks-block__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tl-assign-tasks-block__title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+
+.tl-assign-tasks-block__badge {
+  background: #00d084;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 8px;
+  line-height: 1.6;
+}
+
+.tl-assign-tasks-block__filter {
+  font-size: 11px;
+  color: #aaa;
+  font-weight: 600;
+}
+
+/* ── Чипы заданий ─────────────────────────── */
+.tl-task-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tl-task-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px 5px 6px;
+  border-radius: 20px;
+  border: 1.5px solid #b2e0cc;
+  background: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #2d7a55;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  max-width: 260px;
+}
+
+.tl-task-chip:hover {
+  border-color: #ff4d4f;
+  background: #fff2f2;
+  color: #c0392b;
+}
+
+.tl-task-chip__num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #00d084;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.tl-task-chip:hover .tl-task-chip__num {
+  background: #ff4d4f;
+}
+
+.tl-task-chip__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.tl-task-chip__remove {
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+  color: #ff4d4f;
+}
+
+.tl-task-chip:hover .tl-task-chip__remove {
+  opacity: 1;
+}
+
+/* ── Блок выбранных заданий ─────────────────── */
+.tl-assign-tasks-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f6faf8;
+  border: 1.5px solid #c8ead9;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.tl-assign-tasks-block__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tl-assign-tasks-block__title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+.tl-assign-tasks-block__badge {
+  background: #00d084;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 8px;
+  line-height: 1.6;
+}
+.tl-assign-tasks-block__filter {
+  font-size: 11px;
+  color: #aaa;
+  font-weight: 600;
+}
+
+/* ── Чипы заданий ───────────────────────────── */
+.tl-task-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tl-task-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px 5px 6px;
+  border-radius: 20px;
+  border: 1.5px solid #b2e0cc;
+  background: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #2d7a55;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  max-width: 240px;
+}
+.tl-task-chip:hover {
+  border-color: #ff4d4f;
+  background: #fff2f2;
+  color: #c0392b;
+}
+.tl-task-chip__num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #00d084;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.tl-task-chip:hover .tl-task-chip__num { background: #ff4d4f; }
+.tl-task-chip__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.tl-task-chip__remove {
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+  color: #ff4d4f;
+}
+.tl-task-chip:hover .tl-task-chip__remove { opacity: 1; }
+
+/* ── Автопроверка ───────────────────────────── */
+.tl-autocheck {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #f9f9f9;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.tl-autocheck__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.tl-autocheck__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tl-autocheck__label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+.tl-autocheck__desc {
+  font-size: 11px;
+  color: #999;
+  font-weight: 600;
+}
+
+/* Тумблер */
+.tl-autocheck__toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.22s;
+  padding: 0;
+  outline: none;
+}
+.tl-autocheck__toggle.on  { background: #00d084; }
+.tl-autocheck__toggle.off { background: #d1d5db; }
+.tl-autocheck__toggle:focus-visible {
+  box-shadow: 0 0 0 3px rgba(0, 208, 132, 0.3);
+}
+.tl-autocheck__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  display: block;
+}
+.tl-autocheck__toggle.on  .tl-autocheck__thumb { transform: translateX(20px); }
+.tl-autocheck__toggle.off .tl-autocheck__thumb { transform: translateX(0); }
+
+/* Плашка режима */
+.tl-autocheck__mode {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 9px;
+  padding: 6px 10px;
+  transition: background 0.2s, color 0.2s;
+}
+.tl-autocheck__mode.auto   { background: rgba(0,208,132,0.1); color: #007a4d; }
+.tl-autocheck__mode.manual { background: rgba(99,102,241,0.08); color: #4338ca; }
+.tl-autocheck__mode-icon   { font-size: 14px; flex-shrink: 0; }

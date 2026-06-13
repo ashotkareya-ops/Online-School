@@ -13,7 +13,7 @@ class HomeworkSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'subject', 'subject_name', 'exam_type',
             'teacher', 'teacher_name', 'student',
-            'due_date', 'status', 'comment', 'created_at',
+            'due_date', 'status', 'auto_check', 'comment', 'created_at',
         ]
         read_only_fields = ['teacher', 'created_at']
 
@@ -29,7 +29,7 @@ class HomeworkCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model  = Homework
-        fields = ['title', 'subject', 'student', 'due_date', 'comment']
+        fields = ['title', 'subject', 'student', 'due_date', 'auto_check', 'comment']
 
     def validate_subject(self, subject):
         teacher = self.context['request'].user
