@@ -249,8 +249,33 @@
   .homework-grid--2 { grid-template-columns: 1fr !important; }
 }
 
+/* ── Трёхколоночная сетка (Отправлено / Нужно проверить / Проверено) ── */
+.homework-grid--3 {
+  grid-template-columns: 1fr 1fr 1fr !important;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .homework-grid--3 { grid-template-columns: 1fr 1fr !important; }
+}
+@media (max-width: 700px) {
+  .homework-grid--3 { grid-template-columns: 1fr !important; }
+}
+
+/* stat-card "Отправлено" */
+.stat-card.sent-border { border-left: 3px solid #3b82f6; }
+
 /* stat-card "Проверено" */
 .stat-card.checked-border { border-left: 3px solid #00a86b; }
+
+/* Подпись на карточке в колонке "Отправлено" */
+.hw-sent-hint {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b82f6;
+}
 
 /* Имя ученика над карточкой */
 .hw-student-name {
@@ -273,7 +298,266 @@
 }
 .btn-hw-check:hover { background: #ffedd5; border-color: #fb923c; }
 
+/* Кнопка "Посмотреть задания" (Отправлено) */
+.btn-hw-preview {
+  align-self: flex-start;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  font-size: 12px; font-weight: 600;
+  padding: 5px 14px; border-radius: 8px;
+  cursor: pointer; margin-top: 6px;
+  transition: background 0.2s, border-color 0.2s;
+}
+.btn-hw-preview:hover { background: #dbeafe; border-color: #93c5fd; }
+
+/* Кнопка "Посмотреть результат" (Проверено) */
+.btn-hw-view {
+  align-self: flex-start;
+  background: #f2fbf6;
+  border: 1px solid #b7ebd1;
+  color: #00a86b;
+  font-size: 12px; font-weight: 600;
+  padding: 5px 14px; border-radius: 8px;
+  cursor: pointer; margin-top: 4px;
+  transition: background 0.2s, border-color 0.2s;
+}
+.btn-hw-view:hover { background: #e6f6ee; border-color: #7ddcae; }
+
 /* Оценка */
 .hw-grade-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
 .hw-grade-label { font-size: 12px; color: #aaa; }
 .hw-grade-value { font-size: 13px; font-weight: 700; color: #00a86b; }
+
+/* ── Экран проверки ДЗ учителем (карточки — tr-*, ниже только своё) ─────────── */
+
+/* Блок ответа ученика — переиспользует .tr-answer-wrap, тут только акценты */
+.hw-review-answer { align-items: center; flex-wrap: wrap; }
+.hw-review-answer-value {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.hw-review-answer--correct { background: #f2fbf6; }
+.hw-review-answer--correct .hw-review-answer-value { color: #00a86b; }
+.hw-review-answer--wrong { background: #fef4f2; }
+.hw-review-answer--wrong .hw-review-answer-value { color: #e74c3c; }
+
+.hw-auto-verdict {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.hw-auto-verdict.ok  { background: #e6f6ee; color: #00a86b; }
+.hw-auto-verdict.bad { background: #fdeceb; color: #e74c3c; }
+
+/* Ручная проверка задания учителем */
+.hw-manual-verdict {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.hw-manual-verdict-label {
+  font-size: 12px;
+  color: #999;
+  margin-right: 2px;
+}
+.hw-verdict-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #e0e0e0;
+  background: #fff;
+  color: #666;
+  transition: all 0.15s ease;
+}
+.hw-verdict-btn--ok:hover  { border-color: #00a86b; color: #00a86b; }
+.hw-verdict-btn--bad:hover { border-color: #e74c3c; color: #e74c3c; }
+.hw-verdict-btn--ok.active {
+  background: #00a86b; border-color: #00a86b; color: #fff;
+}
+.hw-verdict-btn--bad.active {
+  background: #e74c3c; border-color: #e74c3c; color: #fff;
+}
+
+/* Выбор итоговой оценки */
+.hw-grade-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hw-grade-picker-label {
+  font-size: 13px;
+  color: #999;
+  margin-right: 4px;
+}
+.hw-grade-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1.5px solid #e0e0e0;
+  background: #fff;
+  color: #333;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.hw-grade-btn:hover { border-color: #00a86b; }
+.hw-grade-btn.active {
+  background: linear-gradient(135deg, #00d181, #00a86b);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(0,168,107,0.3);
+}
+
+.hw-review-hint {
+  text-align: right;
+  font-size: 12px;
+  color: #e67e22;
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .hw-grade-picker { flex-wrap: wrap; }
+  .hw-review-hint { text-align: center; }
+}
+
+/* ── Состояние "ещё не решено" (превью ДЗ до выполнения учеником) ── */
+.hw-review-answer--pending { background: #f8f9fa; }
+.hw-review-answer-value--pending {
+  color: #aaa;
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* ── Read-only вердикт (просмотр уже проверенного ДЗ) ── */
+.hw-manual-verdict--readonly { gap: 8px; }
+.hw-verdict-static {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: #f1f1f1;
+  color: #888;
+}
+.hw-verdict-static.ok  { background: #e6f6ee; color: #00a86b; }
+.hw-verdict-static.bad { background: #fdeceb; color: #e74c3c; }
+
+/* ── Бейдж режима экрана (Условия ДЗ / Результат ДЗ) в шапке ── */
+.hw-mode-badge {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: #eef2ff;
+  color: #4f46e5;
+  vertical-align: middle;
+}
+
+
+/* ── Плашка "⚡ Авто" на карточке домашнего задания ── */
+.hw-auto-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e6f9f0;
+  color: #00a86b;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.hw-auto-badge-icon {
+  font-size: 10px;
+}
+
+/* ── Контейнер плашки автопроверки в фильтрах ── */
+.th-autocheck-card {
+  background: #ffffff;
+  border: 2px solid rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  flex-grow: 1;
+}
+
+.th-autocheck-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.th-autocheck-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.th-autocheck-card__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #222;
+}
+
+.th-autocheck-card__desc {
+  font-size: 11px;
+  color: #777;
+}
+
+/* ── Переключатель (Toggle Switch) ── */
+.th-autocheck-card__toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  flex-shrink: 0;
+}
+
+.th-autocheck-card__toggle.off {
+  background-color: #ced4da;
+}
+
+.th-autocheck-card__toggle.on {
+  background-color: #00d181;
+  box-shadow: 0 2px 8px rgba(0, 209, 129, 0.3);
+}
+
+/* Кругляшок тумблера */
+.th-autocheck-card__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.th-autocheck-card__toggle.on .th-autocheck-card__thumb {
+  transform: translateX(20px);
+}

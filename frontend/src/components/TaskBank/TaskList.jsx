@@ -135,7 +135,6 @@ const SolutionPanel = ({ task, open }) => (
               <div className="tl-solution__step-num">{i + 1}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
                 {step.text && <p className="tl-solution__step-text">{step.text}</p>}
-                {/* Поддержка и старого поля image, и нового image_url */}
                 {(step.image || step.image_url) && (
                   <img src={step.image || step.image_url} alt={`К шагу ${i + 1}`} className="tl-solution__step-img" />
                 )}
@@ -146,7 +145,7 @@ const SolutionPanel = ({ task, open }) => (
       </div>
       <div className="tl-answer">
         <span className="tl-answer__label">Ответ:</span>
-        <span className="tl-answer__val">{task.answer}</span>
+        <span className="tl-answer__val">{task.answer || 'Развернутый ответ (ручная проверка)'}</span>
       </div>
     </div>
   </div>
@@ -163,7 +162,6 @@ const TaskCard = ({ task, index, cart, onCartToggle }) => {
         <div className={`tl-card__idx ${inCart ? 'in-cart' : ''}`}>{index + 1}</div>
         <div className="tl-card__body">
           {task.text && <p className="tl-card__text">{task.text}</p>}
-          {/* taskImage — с бэкенда это URL из S3 */}
           {task.taskImage && (
             <img src={task.taskImage} alt="К условию" className="tl-card__task-img" />
           )}
@@ -172,8 +170,6 @@ const TaskCard = ({ task, index, cart, onCartToggle }) => {
               {DIFF_LABEL[task.diff]}
             </span>
             <span className="tl-tag tl-tag--neutral">{task.year}</span>
-            
-            {/* Убираем лайки, ставим иконку «Моё задание» */}
             {task.isMine && (
               <span className="tl-tag tl-tag--mine-icon" title="Задание добавлено мной">
                 Добавленное мной
@@ -200,8 +196,12 @@ const TaskCard = ({ task, index, cart, onCartToggle }) => {
 const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
   const currentYear = new Date().getFullYear();
   const [form, setForm] = useState({
-    text: '', answer: '', taskImage: null,
-    diff: '1', year: currentYear,
+    text: '', 
+    answer: '', 
+    taskImage: null,
+    diff: '1', 
+    year: currentYear,
+    autoCheck: true,
     steps: [{ text: '', image: null }],
   });
   const [loading, setLoading] = useState(false);
@@ -219,13 +219,22 @@ const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
     if (!form.text.trim() && !form.taskImage) {
       setError('Введите текст задания или прикрепите изображение'); return;
     }
-    if (!form.answer.trim()) { setError('Введите ответ'); return; }
+    
+    if (form.autoCheck && !form.answer.trim()) { 
+      setError('Для автоматической проверки необходимо ввести краткий ответ'); return; 
+    }
+    
     const validSteps = form.steps.filter(s => s.text.trim() !== '' || s.image !== null);
     if (validSteps.length === 0) { setError('Добавьте хотя бы один шаг решения'); return; }
 
     setError('');
     setLoading(true);
-    await onSave({ ...form, diff: Number(form.diff), year: Number(form.year), steps: validSteps });
+    await onSave({ 
+      ...form, 
+      diff: Number(form.diff), 
+      year: Number(form.year), 
+      steps: validSteps 
+    });
     setLoading(false);
   };
 
@@ -258,7 +267,7 @@ const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
                     {form.steps.length > 1 && (
                       <button type="button" className="tl-modal-step-card__delete"
                         onClick={() => setForm({ ...form, steps: form.steps.filter((_, idx) => idx !== i) })}>
-                        ✕ Удалить
+                        ✕ ...Удалить
                       </button>
                     )}
                   </div>
@@ -275,10 +284,38 @@ const AddTaskModal = ({ onClose, onSave, subtypeName }) => {
             </div>
           </div>
 
+          <label
+            htmlFor="autoCheck"
+            className={`tl-modal__autocheck ${form.autoCheck ? 'is-active' : ''}`}
+          >
+            <input
+              type="checkbox"
+              id="autoCheck"
+              className="tl-modal__checkbox"
+              checked={form.autoCheck}
+              onChange={e => setField('autoCheck', e.target.checked)}
+            />
+            <span className="tl-modal__autocheck-icon">{form.autoCheck ? '⚡' : '👨‍🏫'}</span>
+            <span className="tl-modal__autocheck-text">
+              <span className="tl-modal__autocheck-title">Автоматическая проверка по краткому ответу</span>
+              <span className="tl-modal__autocheck-desc">
+                {form.autoCheck
+                  ? 'Ответ ученика сверяется с эталоном мгновенно'
+                  : 'Задание проверяет преподаватель вручную'}
+              </span>
+            </span>
+          </label>
+
           <div className="tl-modal__field">
-            <label className="tl-modal__label">Ответ *</label>
+            <label className="tl-modal__label">
+              Правильный ответ
+              {form.autoCheck
+                ? <span className="tl-modal__required">*</span>
+                : <span className="tl-modal__optional">необязательно</span>}
+            </label>
             <textarea className="tl-modal__textarea tl-modal__textarea--sm" rows={1}
-              placeholder="Например: 240 км" value={form.answer}
+              placeholder={form.autoCheck ? "Например: 240" : "Развернутый ответ или ключевое число..."} 
+              value={form.answer}
               onChange={e => setField('answer', e.target.value)} />
           </div>
 
@@ -321,29 +358,28 @@ const AssignModal = ({ cart, examType, subject, onClose, onAssign, onCartToggle 
   const [autoCheck, setAutoCheck] = useState(false);
 
   useEffect(() => {
-  const fetchFilteredStudents = async () => {
-    setIsLoading(true);
-    try {
-      // Гарантируем, что тип экзамена пойдет маленькими буквами ('ege' / 'oge')
-      const examParam = examType ? String(examType).toLowerCase() : '';
-      const subjectParam = subject ? String(subject).trim() : '';
+    const fetchFilteredStudents = async () => {
+      setIsLoading(true);
+      try {
+        const examParam = examType ? String(examType).toLowerCase() : '';
+        const subjectParam = subject ? String(subject).trim() : '';
 
-      const res = await authFetch(
-        `${API_URL}/api/teacher/students/?exam_type=${examParam}&subject=${encodeURIComponent(subjectParam)}`
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setStudents(data);
+        const res = await authFetch(
+          `${API_URL}/api/teacher/students/?exam_type=${examParam}&subject=${encodeURIComponent(subjectParam)}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setStudents(data);
+        }
+      } catch (err) {
+        console.error('Ошибка при загрузке студентов учителя:', err);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      console.error('Ошибка при загрузке студентов учителя:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  fetchFilteredStudents();
-}, [examType, subject]);
+    fetchFilteredStudents();
+  }, [examType, subject]);
 
   const isAllSelected = students.length > 0 && selectedStudents.length === students.length;
 
@@ -362,14 +398,11 @@ const AssignModal = ({ cart, examType, subject, onClose, onAssign, onCartToggle 
   return (
     <div className="tl-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="tl-modal">
-
-        {/* Шапка */}
         <div className="tl-modal__header">
           <h3 className="tl-modal__title">Задать домашнее задание</h3>
           <button className="tl-modal__close" onClick={onClose}>✕</button>
         </div>
 
-        {/* ── Выбранные задания: чипы ── */}
         <div className="tl-assign-tasks-block">
           <div className="tl-assign-tasks-block__header">
             <span className="tl-assign-tasks-block__title">
@@ -402,7 +435,6 @@ const AssignModal = ({ cart, examType, subject, onClose, onAssign, onCartToggle 
           </div>
         </div>
 
-        {/* ── Кому назначить ── */}
         <div className="tl-modal__field">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <label className="tl-modal__label">Кому назначить? *</label>
@@ -441,11 +473,10 @@ const AssignModal = ({ cart, examType, subject, onClose, onAssign, onCartToggle 
           </div>
         </div>
 
-        {/* ── Автопроверка — под списком учеников ── */}
         <div className="tl-autocheck">
           <div className="tl-autocheck__row">
             <div className="tl-autocheck__info">
-              <span className="tl-autocheck__label">Автопроверка</span>
+              <span className="tl-autocheck__label">Автопроверка общего ДЗ</span>
               <span className="tl-autocheck__desc">
                 {autoCheck
                   ? 'Система сверит ответ с эталоном автоматически'
@@ -471,7 +502,6 @@ const AssignModal = ({ cart, examType, subject, onClose, onAssign, onCartToggle 
           </div>
         </div>
 
-        {/* ── Срок сдачи ── */}
         <div className="tl-modal__field">
           <label className="tl-modal__label">Срок сдачи (необязательно)</label>
           <input type="date" className="tl-modal__textarea tl-modal__textarea--sm"
@@ -515,7 +545,6 @@ const CartWidget = ({ cart, onAssign }) => {
 };
 
 // ─── Главный компонент ────────────────────────────────────────────────────────
-// subtype теперь объект { id, name }, а не просто строка
 const TaskList = ({ examType, subject, subjectId, groupName, subtype, onBack, cart, onCartToggle, onAssign, onTaskAdded }) => {
   const [sort, setSort]             = useState('default');
   const [showModal, setShowModal]   = useState(false);
@@ -523,7 +552,6 @@ const TaskList = ({ examType, subject, subjectId, groupName, subtype, onBack, ca
   const [tasks, setTasks]           = useState([]);
   const [isLoading, setIsLoading]   = useState(false);
 
-  // Загрузка заданий с бэкенда
   useEffect(() => {
     if (!subtype?.id) return;
     const fetchTasks = async () => {
@@ -545,7 +573,6 @@ const TaskList = ({ examType, subject, subjectId, groupName, subtype, onBack, ca
     fetchTasks();
   }, [subtype?.id, sort]);
 
-  // Отправка нового задания на бэкенд
   const handleSave = async (form) => {
     const formData = new FormData();
     formData.append('subtype_id', subtype.id);
@@ -553,6 +580,7 @@ const TaskList = ({ examType, subject, subjectId, groupName, subtype, onBack, ca
     formData.append('answer', form.answer);
     formData.append('diff', form.diff);
     formData.append('year', form.year);
+    formData.append('auto_check', form.autoCheck); // Передаем на бэкенд флаг автопроверки
 
     if (form.taskImage?.file) {
       formData.append('task_image', form.taskImage.file);
@@ -570,7 +598,6 @@ const TaskList = ({ examType, subject, subjectId, groupName, subtype, onBack, ca
       const res = await authFetch(`${API_URL}/api/tasks/`, {
         method: 'POST',
         body: formData,
-        // НЕ ставим Content-Type вручную — браузер сам добавит boundary для FormData
       });
 
       if (!res.ok) {
@@ -583,7 +610,6 @@ const TaskList = ({ examType, subject, subjectId, groupName, subtype, onBack, ca
       setTasks(prev => [newTask, ...prev]);
       setShowModal(false);
 
-      // Обновляем счётчик total в родителе
       if (onTaskAdded) onTaskAdded(subtype.id);
     } catch {
       alert('Ошибка соединения с сервером');
@@ -657,7 +683,7 @@ const TaskList = ({ examType, subject, subjectId, groupName, subtype, onBack, ca
           cart={cart} 
           examType={examType} 
           subject={subject} 
-          onCartToggle={onCartToggle} // <- Добавили этот пропс[cite: 1]
+          onCartToggle={onCartToggle}
           onClose={() => setShowAssign(false)}
           onAssign={(data) => { setShowAssign(false); onAssign(data); }} 
         />

@@ -210,6 +210,13 @@
 }
 .hw-review-form__textarea:focus { border-color: #00a86b; }
 
+/* Read-only значение ответа (в экране предпросмотра отправленного ДЗ) */
+.hw-review-answer-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #222;
+}
+
 /* Done card */
 .hw-review-done-card {
   background: #f0fdf4;

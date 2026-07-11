@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import SetupProfileModal from '../components/SetupProfileModal/SetupProfileModal';
 import TaskBank from '../components/TaskBank/TaskBank';
 import Trainer from '../components/Trainer/Trainer';
-import Homework from '../Homework/Homework';
+import StudentHomework from '../Homework/StudentHomework';
 import './DashboardLayout.css';
 import Schedule from '../components/Schedule/Schedule';
 import TeacherHomework from '../Homework/TeacherHomework';
@@ -155,7 +155,7 @@ const DashboardLayout = () => {
           // return <TeacherHomework user={user} studentsData={students} />;
         }
 
-        return <Homework user={user} homeworkData={homeworks} />;
+        return <StudentHomework user={user} homeworkData={homeworks} />;
 
       case 'schedule':
         return <Schedule />;

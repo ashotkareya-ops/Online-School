@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './TeacherHomework.css';
+import '../components/Trainer/Trainer.css'
 
 const SUBJECT_COLORS = {
   'Математика':               { bg: '#E6F1FB', color: '#0C447C' },
@@ -141,13 +142,17 @@ const StudentDropdown = ({ students, selected, onChange, loading }) => {
 };
 
 // ── Карточка задания ─────────────────────────────────────────────────────────
-const HwCard = ({ hw, onCheck }) => {
+const HwCard = ({ hw, onCheck, onPreview, onView }) => {
   const col = SUBJECT_COLORS[hw.subject] || { bg: '#F1EFE8', color: '#444441' };
   return (
     <div className="hw-item-card">
       <div className="hw-item-top">
         <p className="hw-item-title">{hw.title}</p>
-        {hw.autoCheck && <span className="hw-auto-badge">Авто</span>}
+        {hw.autoCheck && (
+          <span className="hw-auto-badge">
+            <span className="hw-auto-badge-icon">⚡</span> Авто
+          </span>
+        )}
       </div>
       <div className="hw-item-meta">
         <span className="hw-subject-badge" style={{ background: col.bg, color: col.color }}>{hw.subject}</span>
@@ -159,8 +164,255 @@ const HwCard = ({ hw, onCheck }) => {
           <span className="hw-grade-value">{hw.grade}</span>
         </div>
       )}
-      {hw.status === 'review' && !hw.autoCheck && (
-        <button className="btn-hw-check" onClick={() => onCheck && onCheck(hw)}>Проверить</button>
+      {hw.status === 'review' && (
+        <button className="btn-hw-check" onClick={() => onCheck && onCheck(hw)}>
+          {hw.autoCheck ? 'Посмотреть' : 'Проверить'}
+        </button>
+      )}
+      {hw.status === 'sent' && (
+        <>
+          <span className="hw-sent-hint">⏳ Ожидает выполнения учеником</span>
+          <button className="btn-hw-preview" onClick={() => onPreview && onPreview(hw)}>
+            Посмотреть задания
+          </button>
+        </>
+      )}
+      {hw.status === 'checked' && (
+        <button className="btn-hw-view" onClick={() => onView && onView(hw)}>
+          Посмотреть результат
+        </button>
+      )}
+    </div>
+  );
+};
+
+// ── Карточка задания в режиме проверки/просмотра (учитель) ──────────────────
+const ReviewTaskCard = ({ task, index, verdict, onVerdict, cardRef, readOnly, notSolved }) => {
+  const autoChecked = task.autoCheck !== false && task.isCorrect !== null && task.isCorrect !== undefined;
+  const isCorrect   = autoChecked ? task.isCorrect : verdict === 'correct';
+  const isWrong     = autoChecked ? !task.isCorrect : verdict === 'wrong';
+
+  return (
+    <div className="tr-solve-card" ref={cardRef}>
+      <div className="tr-solve-card__num">{index + 1}</div>
+      <div className="tr-solve-card__body">
+        <div className="tr-solve-card__meta">
+          {task.subtype_name && <span className="tr-solve-tag">{task.subtype_name}</span>}
+          {task.diff && (
+            <span className="tr-solve-tag tr-solve-tag--diff">
+              {task.diff === 1 ? 'Лёгкое' : task.diff === 2 ? 'Среднее' : 'Сложное'}
+            </span>
+          )}
+        </div>
+
+        {task.text && <p className="tr-solve-card__text">{task.text}</p>}
+        {task.taskImage && (
+          <img src={task.taskImage} alt="Условие" className="tr-solve-card__img" />
+        )}
+
+        {task.steps?.length > 0 && (
+          <div className="tr-solve-card__steps">
+            {task.steps.map((step, si) => (
+              <div key={si} className="tr-solve-step">
+                {step.text && <p className="tr-solve-step__text">{step.text}</p>}
+                {(step.image || step.image_url) && (
+                  <img
+                    src={step.image || step.image_url}
+                    alt={`Шаг ${si + 1}`}
+                    className="tr-solve-step__img"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Ответ ученика — как tr-answer-wrap, но нередактируемый */}
+        {notSolved ? (
+          <div className="tr-answer-wrap hw-review-answer hw-review-answer--pending">
+            <label className="tr-answer-label">Ответ ученика:</label>
+            <span className="hw-review-answer-value hw-review-answer-value--pending">Ещё не решено</span>
+          </div>
+        ) : (
+          <div className={`tr-answer-wrap hw-review-answer ${isCorrect ? 'hw-review-answer--correct' : ''} ${isWrong ? 'hw-review-answer--wrong' : ''}`}>
+            <label className="tr-answer-label">Ответ ученика:</label>
+            <span className="hw-review-answer-value">{task.studentAnswer?.trim() || '—'}</span>
+            {autoChecked && (
+              <span className={`hw-auto-verdict ${task.isCorrect ? 'ok' : 'bad'}`}>
+                {task.isCorrect ? '✓ Верно' : '✗ Неверно'}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Ручная проверка: активная (учитель ставит вердикт) или read-only (только показ уже поставленного) */}
+        {!autoChecked && !notSolved && readOnly && (
+          <div className="hw-manual-verdict hw-manual-verdict--readonly">
+            <span className="hw-manual-verdict-label">Вердикт учителя:</span>
+            <span className={`hw-verdict-static ${verdict === 'correct' ? 'ok' : verdict === 'wrong' ? 'bad' : ''}`}>
+              {verdict === 'correct' ? '✓ Верно' : verdict === 'wrong' ? '✗ Неверно' : '—'}
+            </span>
+          </div>
+        )}
+        {!autoChecked && !notSolved && !readOnly && (
+          <div className="hw-manual-verdict">
+            <span className="hw-manual-verdict-label">Проверка учителя:</span>
+            <button
+              type="button"
+              className={`hw-verdict-btn hw-verdict-btn--ok ${verdict === 'correct' ? 'active' : ''}`}
+              onClick={() => onVerdict('correct')}
+            >✓ Верно</button>
+            <button
+              type="button"
+              className={`hw-verdict-btn hw-verdict-btn--bad ${verdict === 'wrong' ? 'active' : ''}`}
+              onClick={() => onVerdict('wrong')}
+            >✗ Неверно</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ── Экран проверки/просмотра ДЗ (точь-в-точь как экран решения в Trainer) ────
+// mode: 'review' (по умолчанию, проверка и выставление оценки) |
+//       'preview' (ДЗ отправлено, ученик ещё не решал — только условия) |
+//       'readonly' (ДЗ уже проверено — финальный результат без возможности править)
+const HomeworkReviewScreen = ({ hwMeta, data, loading, error, onBack, onFinish, finishing, mode = 'review' }) => {
+  const [verdicts, setVerdicts] = useState({});
+  const [grade,    setGrade]    = useState(null);
+  const cardRefs = useRef({});
+
+  useEffect(() => {
+    setVerdicts(mode === 'readonly' ? (data?.savedVerdicts || {}) : {});
+    setGrade(mode === 'readonly' ? (hwMeta?.grade || null) : null);
+  }, [hwMeta?.id, mode]);
+
+  const tasks = data?.tasks || [];
+  const isPreview  = mode === 'preview';
+  const isReadOnly = mode === 'readonly';
+  const manualTasks = tasks.filter(t => !(t.autoCheck !== false && t.isCorrect !== null && t.isCorrect !== undefined));
+  const manualDone   = manualTasks.filter(t => verdicts[t.id]).length;
+  const allManualDone = manualTasks.length === 0 || manualDone === manualTasks.length;
+  const canFinish = !isPreview && !isReadOnly && allManualDone && !!grade && !finishing;
+
+  const setVerdict = (taskId, v) => setVerdicts(prev => ({ ...prev, [taskId]: v }));
+
+  const handleFinish = () => {
+    if (!canFinish) return;
+    onFinish({ grade, verdicts });
+  };
+
+  const screenTitle = isPreview ? 'Условия ДЗ' : isReadOnly ? 'Результат ДЗ' : null;
+
+  return (
+    <div className="tr-screen">
+      <button className="tr-back-btn" onClick={onBack}>← Назад к списку</button>
+
+      {/* ── Липкая шапка, как у Trainer на экране решения ── */}
+      <div className="tr-solve-sticky">
+        <div className="tr-solve-sticky-row">
+          <div className="tr-solve-sticky-left">
+            <div className="tr-solve-sticky-info">
+              <span className="tr-solve-sticky-title">
+                {hwMeta?.title}
+                {screenTitle && <span className="hw-mode-badge">{screenTitle}</span>}
+              </span>
+              <span className="tr-solve-sticky-sub">
+                {hwMeta?.studentName}{hwMeta?.subject ? ` · ${hwMeta.subject}` : ''}
+                {isPreview && hwMeta?.deadline ? ` · до ${hwMeta.deadline}` : ''}
+                {isReadOnly && hwMeta?.grade ? ` · оценка ${hwMeta.grade}` : ''}
+              </span>
+            </div>
+          </div>
+
+          {!isPreview && !isReadOnly && manualTasks.length > 0 && (
+            <div className="tr-dots">
+              {tasks.map((t, i) => (
+                <div
+                  key={t.id}
+                  className={`tr-dot ${verdicts[t.id] ? 'answered' : ''}`}
+                  onClick={() => cardRefs.current[i]?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                  title={`Задание ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
+
+          {!isPreview && !isReadOnly && (
+            <button
+              className="tr-generate-btn"
+              onClick={handleFinish}
+              disabled={!canFinish}
+              style={{ flexShrink: 0 }}
+            >
+              {finishing ? 'Сохранение...' : 'Закончить проверку →'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="tr-loading">Загрузка...</div>
+      ) : error ? (
+        <div className="tr-empty">
+          <span className="tr-empty-icon">⚠️</span>
+          <p>{error}</p>
+        </div>
+      ) : tasks.length === 0 ? (
+        <div className="tr-empty">
+          <span className="tr-empty-icon">📋</span>
+          <p>{isPreview ? 'В этом ДЗ пока нет заданий.' : 'В этом задании пока нет решений.'}</p>
+        </div>
+      ) : (
+        <>
+          <div className="tr-solve-list">
+            {tasks.map((task, i) => (
+              <ReviewTaskCard
+                key={task.id}
+                task={task}
+                index={i}
+                verdict={verdicts[task.id]}
+                onVerdict={(v) => setVerdict(task.id, v)}
+                cardRef={el => { cardRefs.current[i] = el; }}
+                readOnly={isReadOnly}
+                notSolved={isPreview}
+              />
+            ))}
+          </div>
+
+          {!isPreview && !isReadOnly && (
+            <>
+              {/* ── Нижняя панель: выставление оценки ── */}
+              <div className="tr-footer">
+                <div className="hw-grade-picker">
+                  <span className="hw-grade-picker-label">Оценка:</span>
+                  {[2, 3, 4, 5].map(g => (
+                    <button
+                      key={g}
+                      type="button"
+                      className={`hw-grade-btn ${grade === g ? 'active' : ''}`}
+                      onClick={() => setGrade(g)}
+                    >{g}</button>
+                  ))}
+                </div>
+                <button
+                  className="tr-generate-btn"
+                  onClick={handleFinish}
+                  disabled={!canFinish}
+                >
+                  {finishing ? 'Сохранение...' : 'Закончить проверку →'}
+                </button>
+              </div>
+              {!allManualDone && (
+                <p className="hw-review-hint">Отметьте вердикт для всех заданий, требующих ручной проверки.</p>
+              )}
+              {allManualDone && !grade && (
+                <p className="hw-review-hint">Выберите итоговую оценку, чтобы завершить проверку.</p>
+              )}
+            </>
+          )}
+        </>
       )}
     </div>
   );
@@ -177,43 +429,47 @@ const TeacherHomework = ({ user }) => {
   const [selectedStudents, setSelectedStudents] = useState(new Set());
   const [activeSubject,    setActiveSubject]    = useState(null);
 
-  // Данные из API
-  const [studentsData, setStudentsData] = useState([]);  // [{id, name, examType, subjects, homeworks}]
-  const [loadingStudents, setLoadingStudents] = useState(true);
-  const [loadingHomeworks, setLoadingHomeworks] = useState(false);
+  // ── ДЕМО-ДАННЫЕ ДЛЯ ТЕСТИРОВАНИЯ И ВЕРСТКИ ──
+  const [studentsData, setStudentsData] = useState([
+    {
+      id: 1,
+      name: "Алексеев Александр",
+      examType: "ege",
+      subjects: ["Математика"],
+      homeworks: [
+        {
+          id: 991,
+          title: "Логарифмические уравнения и неравенства",
+          subject: "Математика",
+          status: "review",
+          deadline: "15 июля",
+          autoCheck: false,
+          grade: null,
+        }
+      ]
+    },
+    {
+      id: 2,
+      name: "Иванова Мария",
+      examType: "ege",
+      subjects: ["Информатика"],
+      homeworks: [
+        {
+          id: 992,
+          title: "Задание 24: Обработка символьных строк",
+          subject: "Информатика",
+          status: "checked",
+          deadline: "5 июля",
+          autoCheck: true,
+          grade: 5,
+        }
+      ]
+    }
+  ]);  
+  const [loadingStudents, setLoadingStudents] = useState(false); 
+  const [loadingHomeworks, setLoadingHomeworks] = useState(false); 
   const [error, setError] = useState(null);
 
-  // 1. Загружаем список учеников учителя
-  useEffect(() => {
-    setLoadingStudents(true);
-    authFetch(`${API_BASE}/teacher/students/`)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then(data => {
-        // data: [{id, first_name, last_name, exam_type, subjects, ...}]
-        const mapped = data.map(s => ({
-          id:       s.id,
-          name:     `${s.last_name} ${s.first_name}`.trim() || s.username || s.email,
-          examType: Array.isArray(s.exam_type) ? s.exam_type[0] : s.exam_type || 'oge',
-          // subjects — словарь {"oge": [...], "ege": [...]} или массив
-          subjects: Array.isArray(s.subjects)
-            ? s.subjects
-            : Object.values(s.subjects || {}).flat(),
-          homeworks: [],  // загружаем отдельно
-        }));
-        setStudentsData(mapped);
-        setLoadingStudents(false);
-      })
-      .catch(err => {
-        console.error('Ошибка загрузки учеников:', err);
-        setError('Не удалось загрузить учеников');
-        setLoadingStudents(false);
-      });
-  }, []);
-
-  // 2. Загружаем домашки всех учеников (одним запросом)
   useEffect(() => {
     if (studentsData.length === 0) return;
     setLoadingHomeworks(true);
@@ -223,7 +479,6 @@ const TeacherHomework = ({ user }) => {
         return r.json();
       })
       .then(data => {
-        // data: [{id, title, subject, status, deadline, auto_check, grade, student_id}]
         setStudentsData(prev => prev.map(s => ({
           ...s,
           homeworks: data
@@ -232,7 +487,7 @@ const TeacherHomework = ({ user }) => {
               id:        hw.id,
               title:     hw.title,
               subject:   hw.subject,
-              status:    hw.status,           // 'todo' | 'review' | 'checked'
+              status:    hw.status, 
               deadline:  hw.deadline ? formatDate(hw.deadline) : null,
               autoCheck: hw.auto_check || false,
               grade:     hw.grade || null,
@@ -263,17 +518,14 @@ const TeacherHomework = ({ user }) => {
     setActiveSubject(null);
   };
 
-  // Ученики текущего типа экзамена
   const filteredStudents = studentsData.filter(s => s.examType === activeExam);
 
-  // Предметы по выбранным ученикам
   const visibleStudents = selectedStudents.size === 0
     ? filteredStudents
     : filteredStudents.filter(s => selectedStudents.has(s.id));
 
   const subjectsForFilter = [...new Set(visibleStudents.flatMap(s => s.subjects))];
 
-  // Домашки
   const allHomeworks = filteredStudents.flatMap(s =>
     (s.homeworks || []).map(hw => ({ ...hw, studentId: s.id, studentName: s.name }))
   );
@@ -284,13 +536,139 @@ const TeacherHomework = ({ user }) => {
     return byStudent && bySubject;
   });
 
-  const reviewTasks  = visibleHw.filter(h => h.status === 'review');
-  const checkedTasks = visibleHw.filter(h => h.status === 'checked');
+  const sentTasks     = visibleHw.filter(h => h.status === 'sent');
+  const reviewTasks   = visibleHw.filter(h => h.status === 'review');
+  const checkedTasks  = visibleHw.filter(h => h.status === 'checked');
   const showStudentName = selectedStudents.size !== 1;
 
+  const [reviewingHw,   setReviewingHw]   = useState(null); 
+  const [reviewData,    setReviewData]    = useState(null); 
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewError,   setReviewError]   = useState(null);
+  const [finishing,     setFinishing]     = useState(false);
+  const [reviewMode,    setReviewMode]    = useState('review'); // review | preview | readonly
+
   const handleCheck = (hw) => {
-    // Здесь можно открыть модалку проверки
-    alert(`Проверка: «${hw.title}» — ${hw.studentName}`);
+    setReviewMode('review');
+    setReviewingHw(hw);
+    setReviewData(null);
+    setReviewError(null);
+    setReviewLoading(true);
+
+    setTimeout(() => {
+      setReviewData({
+        tasks: [
+          {
+            id: 1,
+            text: "Решите логарифмическое уравнение: log2(x + 3) = 4",
+            subtype_name: "Логарифмические уравнения",
+            diff: 1,
+            autoCheck: hw.autoCheck,
+            isCorrect: hw.autoCheck ? true : null,
+            studentAnswer: "x = 13",
+          },
+          {
+            id: 2,
+            text: "Найдите область определения функции...",
+            subtype_name: "Область определения",
+            diff: 2,
+            autoCheck: hw.autoCheck,
+            isCorrect: hw.autoCheck ? false : null,
+            studentAnswer: "(-inf; 5)",
+          }
+        ]
+      });
+      setReviewLoading(false);
+    }, 400);
+  };
+
+  // Просмотр условий ДЗ до того, как ученик его решил (статус "Отправлено")
+  const handlePreview = (hw) => {
+    setReviewMode('preview');
+    setReviewingHw(hw);
+    setReviewData(null);
+    setReviewError(null);
+    setReviewLoading(true);
+
+    setTimeout(() => {
+      setReviewData({
+        tasks: [
+          {
+            id: 1,
+            text: "Решите логарифмическое уравнение: log2(x + 3) = 4",
+            subtype_name: "Логарифмические уравнения",
+            diff: 1,
+            autoCheck: hw.autoCheck,
+          },
+          {
+            id: 2,
+            text: "Найдите область определения функции...",
+            subtype_name: "Область определения",
+            diff: 2,
+            autoCheck: hw.autoCheck,
+          }
+        ]
+      });
+      setReviewLoading(false);
+    }, 400);
+  };
+
+  // Просмотр уже проверенного ДЗ — финальный результат, без возможности редактировать
+  const handleView = (hw) => {
+    setReviewMode('readonly');
+    setReviewingHw(hw);
+    setReviewData(null);
+    setReviewError(null);
+    setReviewLoading(true);
+
+    setTimeout(() => {
+      setReviewData({
+        tasks: [
+          {
+            id: 1,
+            text: "Решите логарифмическое уравнение: log2(x + 3) = 4",
+            subtype_name: "Логарифмические уравнения",
+            diff: 1,
+            autoCheck: hw.autoCheck,
+            isCorrect: hw.autoCheck ? true : null,
+            studentAnswer: "x = 13",
+          },
+          {
+            id: 2,
+            text: "Найдите область определения функции...",
+            subtype_name: "Область определения",
+            diff: 2,
+            autoCheck: hw.autoCheck,
+            isCorrect: hw.autoCheck ? false : null,
+            studentAnswer: "(-inf; 5)",
+          }
+        ],
+        savedVerdicts: { 2: 'wrong' }, // ранее выставленный вердикт по заданиям с ручной проверкой
+      });
+      setReviewLoading(false);
+    }, 400);
+  };
+
+  const handleCloseReview = () => {
+    setReviewingHw(null);
+    setReviewData(null);
+    setReviewError(null);
+  };
+
+  const handleFinishReview = ({ grade, verdicts }) => {
+    if (!reviewingHw) return;
+    setFinishing(true);
+
+    setTimeout(() => {
+      setStudentsData(prev => prev.map(s => ({
+        ...s,
+        homeworks: (s.homeworks || []).map(hw =>
+          hw.id === reviewingHw.id ? { ...hw, status: 'checked', grade } : hw
+        ),
+      })));
+      setFinishing(false);
+      handleCloseReview();
+    }, 300);
   };
 
   if (error) return (
@@ -300,6 +678,23 @@ const TeacherHomework = ({ user }) => {
       </div>
     </div>
   );
+
+  if (reviewingHw) {
+    return (
+      <div className="main-container">
+        <HomeworkReviewScreen
+          hwMeta={reviewingHw}
+          data={reviewData}
+          loading={reviewLoading}
+          error={reviewError}
+          finishing={finishing}
+          mode={reviewMode}
+          onBack={handleCloseReview}
+          onFinish={handleFinishReview}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="main-container">
@@ -321,6 +716,12 @@ const TeacherHomework = ({ user }) => {
 
       {/* ── Статистика ── */}
       <div className="stats-container">
+        <div className="stat-card sent-border">
+          <span className="stat-label">Отправлено</span>
+          <span className="stat-value" style={{ color: '#3b82f6' }}>
+            {loadingHomeworks ? '…' : sentTasks.length}
+          </span>
+        </div>
         <div className="stat-card review-border">
           <span className="stat-label">Нужно проверить</span>
           <span className="stat-value" style={{ color: '#e67e22' }}>
@@ -365,7 +766,25 @@ const TeacherHomework = ({ user }) => {
       </div>
 
       {/* ── Колонки ── */}
-      <div className="homework-grid homework-grid--2">
+      <div className="homework-grid homework-grid--3">
+        <div className="homework-column">
+          <h3 className="column-title">
+            Отправлено
+            <span className="column-hint">ждёт выполнения учеником</span>
+          </h3>
+          {loadingHomeworks
+            ? <p className="hw-empty">Загрузка...</p>
+            : sentTasks.length === 0
+              ? <p className="hw-empty">Нет отправленных</p>
+              : sentTasks.map(hw => (
+                  <div key={hw.id}>
+                    {showStudentName && <p className="hw-student-name">{hw.studentName}</p>}
+                    <HwCard hw={hw} onPreview={handlePreview} />
+                  </div>
+                ))
+          }
+        </div>
+
         <div className="homework-column">
           <h3 className="column-title">
             Нужно проверить
@@ -396,7 +815,7 @@ const TeacherHomework = ({ user }) => {
               : checkedTasks.map(hw => (
                   <div key={hw.id}>
                     {showStudentName && <p className="hw-student-name">{hw.studentName}</p>}
-                    <HwCard hw={hw} />
+                    <HwCard hw={hw} onView={handleView} />
                   </div>
                 ))
           }
